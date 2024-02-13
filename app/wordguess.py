@@ -5,6 +5,7 @@
 import random
 from collections import Counter
 import json
+import secrets
 from .words.words import words
 from .words.correct import correct_words
 
@@ -16,13 +17,15 @@ from .words.correct import correct_words
 ##  dictionary is going to store all of the game info
 #====================================================================
 
+
 GAMES = {
     # GAME_ID
     1: {
         'correct_word': 'word', 
-        'guess_count': 6,
+        'guess_count': 4,
         'username': 'username',
         'status': False,
+        'result': None,
         'guesses': {
                         1: {
                             'guess': 'aisle',
@@ -44,47 +47,71 @@ GAMES = {
     }
 }
 
-def lookup_game(game_id: int) -> bool:
+
+
+def _create_id():
+    while True:
+        game_id = secrets.token_urlsafe()
+        # Makes sure the game_id isn't already a key for another game 
+        try:
+            GAMES[game_id]
+        except(KeyError):
+            return game_id
+
+
+def _validate_id(game_id) -> bool:
     try:
-        status = GAMES[game_id]['status']
-        if status is False:
-            return False
-        else:
-            return True
+        GAMES[game_id]
+        return True
     except(KeyError):
-        print("Game not found")
-        print(GAMES)
+        return false
+
+
+def _validate_status(game_id) -> bool:
+    if GAMES[game_id]["status"] is True:
+        return True
+    else:
         return False
 
 
-def choose_word() -> str:
+def _create_error_response(error, message) -> dict:
+    error_response = {
+        "error": error,
+        "message": message
+    }
+    return error_response
+
+
+def _choose_word() -> str:
     length = len(words)
     x = random.randint(0, length - 1)
     return words[x]
     
     
-def check_word(user_guess: str):
+def _check_word(user_guess: str) -> bool:
     if user_guess in correct_words:
         return True
     return False
 
 
-def make_game(username):
-    game_id = max(GAMES.keys()) + 1
-    
-    correct = choose_word()
-    GAMES[game_id] = {
-        'correct_word': correct,
-        'guess_count': 0,
-        'username': username,
-        'guesses': {},
-        'status': True
-    }
-    
-    return game_id
+def _update_game(game_id, guess, feedback, valid=True, status=True, result=None):
+    """Generic Updater for the GAMES dictionary."""
+    try:
+        new_guess = max(GAMES[game_id]["guesses"].keys()) + 1
+    except(KeyError, ValueError):
+        new_guess = 1
+    if valid:
+        GAMES[game_id]["guess_count"] += 1
+    GAMES[game_id]["status"] = status
+    GAMES[game_id]["result"] = result
+    GAMES[game_id]["guesses"][new_guess] = {
+        "guess": guess,
+        "feedback": feedback
+    } 
+    return
 
 
-def give_feedback(correct_word, guess):
+def _feedback(correct_word, guess):
     correct_letter_counts = dict(Counter(correct_word))
     feedback_list = [1, 2, 3, 4, 5]
     yellow_letters = []
@@ -106,43 +133,60 @@ def give_feedback(correct_word, guess):
     return ''.join(feedback_list)
 
 
-def update_payload(game_dict: dict, guess: str, feedback: str):
-    """game_dict is the 'guesses' nested dictionary in the GAMES dictionary."""
-    try:
-        guesses = max(game_dict.keys()) + 1
-    except(ValueError, KeyError):
-        guesses = 1
-    game_dict[guesses] = {
-                            "guess": guess,
-                            "feedback": feedback 
+def create_game(username: str) -> dict:
+    game_id, correct_word = _create_id(), _choose_word()
+    GAMES[game_id] = {
+                        "correct_word": correct_word,
+                        "username": username,
+                        "guess_count": 0,
+                        "status": True,
+                        "result": None,
+                        "guesses": {}
                         }
-    return game_dict
+    return game_id
 
 
-def game_to_dict(game_id: int) -> dict:
-    final_game_dict = {
-        "game_id": game_id,
-        "username": GAMES[game_id]["username"],
-        "correct_word": GAMES[game_id]["correct_word"],
-        "guesses": GAMES[game_id]["guesses"]
-    }
-    return final_game_dict
+def create_guess_payload(game_id):
+    """Takes out the correct word from the GAMES dict for the GAME. """
+    payload = dict(GAMES[game_id])
+    payload.pop("correct_word")
+    return payload
 
 
 def game_loop(game_id, guess):
-    if lookup_game(game_id) is False:
-        print(GAMES[game_id])
-        return {"response": "game-id not found or game is done playing"}
-    if not check_word(guess):
-        return {"response": f"{guess} not a valid word in our dictionary."}
+    # Validate game_id (token)
+    if not _validate_id(game_id):
+        message = f"Your game_id {game_id} is invalid"
+        return _create_error_response("game not found", message)
 
-    GAMES[game_id]['guess_count'] += 1
-    feedback = give_feedback(GAMES[game_id]['correct_word'], guess)
-    GAMES[game_id]["guesses"] = update_payload(GAMES[game_id]['guesses'], guess, feedback)
-    if GAMES[game_id]["guess_count"] == 6:
-        GAMES[game_id]["status"] = False
-        # Creates a new JSON DOC
-        final_game_json = game_to_dict(game_id)
-        return final_game_json
-    # Only returning "guesses" nested dictionary
-    return GAMES[game_id]["guesses"] 
+    # Validates that game is still playable via status
+    if not _validate_status(game_id):
+        message = f"The game for the game_id: {game_id} has already finished and is no longer playable."
+        return _create_error_response("game status already complete", message)
+    
+    # Checks if guess is a valid word
+    if not _check_word(guess):
+        # Doesn't count as a guess, sends back feedback as None
+        _update_game(game_id, guess, feedback=None, valid=False)
+        return create_guess_payload(game_id)
+        
+    feedback = _feedback(GAMES[game_id]["correct_word"], guess)
+
+    # Check if user won with feedback 'GGGGG'
+    if feedback == "GGGGG":
+        _update_game(game_id, guess, feedback, status=False, result="won")
+        return GAMES[game_id]
+    
+    # Ran out of guesses, after updating the games makes it 6 guesses
+    if GAMES[game_id]["guess_count"] == 5:
+        _update_game(game_id, guess, feedback, status=False, result="lost")
+        return GAMES[game_id]
+        
+    # guesses < 5 - Keep playing
+    _update_game(game_id, guess, feedback)
+    return create_guess_payload(game_id)
+    
+   
+
+
+
