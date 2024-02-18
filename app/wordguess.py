@@ -8,9 +8,9 @@ import json
 import secrets
 from .words.words import words
 from .words.correct import correct_words
+from pydantic import BaseModel, field_validator
+from typing import List, Optional
 
-
-# TODO: Figure out a better way to create ids and possibly passwords
 
 #====================================================================
 ##  Game functions outside of a class bc the GAMES 
@@ -19,34 +19,25 @@ from .words.correct import correct_words
 
 
 GAMES = {
-    # GAME_ID
-    1: {
-        'correct_word': 'word', 
-        'guess_count': 4,
-        'username': 'username',
-        'status': False,
-        'result': None,
-        'guesses': {
-                        1: {
-                            'guess': 'aisle',
-                            'feedback': "BBBBB"
-                            },
-                        2: {
-                            'guess': 'drown',
-                            'feedback': "BYYBB"
-                            },
-                        3: {
-                            'guess': 'rough',
-                            'feedback': "YYYBY"
-                            },
-                        4: {
-                            'guess': 'humor',
-                            'feedback': 'GGGGG'
-                            },
-                    }
-    }
+
 }
 
+class GuessFeedback(BaseModel):
+    guess_number: int
+    guess: str
+    feedback: Optional[str] = None   
+
+
+class GameData(BaseModel):
+    game_id: str
+    username: str
+    total_guesses: int
+    offical_guesses: int
+    correct_word: str
+    status: bool = True
+    # win/loss
+    result: Optional[str] = None
+    guesses: Optional[List[GuessFeedback]]
 
 
 def _create_id():
@@ -64,11 +55,11 @@ def _validate_id(game_id) -> bool:
         GAMES[game_id]
         return True
     except(KeyError):
-        return false
+        return False
 
 
 def _validate_status(game_id) -> bool:
-    if GAMES[game_id]["status"] is True:
+    if GAMES[game_id].status is True:
         return True
     else:
         return False
@@ -96,18 +87,18 @@ def _check_word(user_guess: str) -> bool:
 
 def _update_game(game_id, guess, feedback, valid=True, status=True, result=None):
     """Generic Updater for the GAMES dictionary."""
-    try:
-        new_guess = max(GAMES[game_id]["guesses"].keys()) + 1
-    except(KeyError, ValueError):
-        new_guess = 1
+    game = GAMES[game_id]
+    game.total_guesses += 1
     if valid:
-        GAMES[game_id]["guess_count"] += 1
-    GAMES[game_id]["status"] = status
-    GAMES[game_id]["result"] = result
-    GAMES[game_id]["guesses"][new_guess] = {
-        "guess": guess,
-        "feedback": feedback
-    } 
+        game.offical_guesses += 1
+    game.status = status
+    game.result = result
+    new_guess = GuessFeedback(
+        guess_number = game.total_guesses,
+        guess = guess,
+        feedback = feedback
+    )
+    game.guesses.append(new_guess)
     return
 
 
@@ -133,22 +124,25 @@ def _feedback(correct_word, guess):
     return ''.join(feedback_list)
 
 
-def create_game(username: str) -> dict:
+def create_game(username: str) -> str:
     game_id, correct_word = _create_id(), _choose_word()
-    GAMES[game_id] = {
-                        "correct_word": correct_word,
-                        "username": username,
-                        "guess_count": 0,
-                        "status": True,
-                        "result": None,
-                        "guesses": {}
-                        }
+    new_game = GameData(
+        game_id = game_id,
+        username = username,
+        total_guesses = 0,
+        offical_guesses = 0,
+        correct_word = correct_word,
+        status = True,
+        result = None,
+        guesses = []
+    )
+    GAMES[game_id] = new_game
     return game_id
 
 
 def create_guess_payload(game_id):
     """Takes out the correct word from the GAMES dict for the GAME. """
-    payload = dict(GAMES[game_id])
+    payload = GAMES[game_id].model_dump()
     payload.pop("correct_word")
     return payload
 
@@ -164,23 +158,29 @@ def game_loop(game_id, guess):
         message = f"The game for the game_id: {game_id} has already finished and is no longer playable."
         return _create_error_response("game status already complete", message)
     
+    # Validates that guess is five characters
+    if len(guess) != 5:
+        message = f"{guess} is is invalid"
+        _update_game(game_id, guess, feedback=None, valid=False)
+        return _create_error_response("Guesses must be 5 characters", message)
+
     # Checks if guess is a valid word
     if not _check_word(guess):
         # Doesn't count as a guess, sends back feedback as None
         _update_game(game_id, guess, feedback=None, valid=False)
         return create_guess_payload(game_id)
         
-    feedback = _feedback(GAMES[game_id]["correct_word"], guess)
+    feedback = _feedback(GAMES[game_id].correct_word, guess)
 
     # Check if user won with feedback 'GGGGG'
     if feedback == "GGGGG":
         _update_game(game_id, guess, feedback, status=False, result="won")
-        return GAMES[game_id]
+        return GAMES[game_id].model_dump()
     
     # Ran out of guesses, after updating the games makes it 6 guesses
-    if GAMES[game_id]["guess_count"] == 5:
+    if GAMES[game_id].offical_guesses == 5:
         _update_game(game_id, guess, feedback, status=False, result="lost")
-        return GAMES[game_id]
+        return GAMES[game_id].model_dump()
         
     # guesses < 5 - Keep playing
     _update_game(game_id, guess, feedback)
