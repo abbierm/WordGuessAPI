@@ -8,7 +8,7 @@ import json
 import secrets
 from .words.words import words
 from .words.correct import correct_words
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from typing import List, Optional
 
 

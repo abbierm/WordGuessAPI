@@ -8,4 +8,6 @@ __pycache__/
 instance/
 .coverage
 flask_session/
-
+*.log
+.logs/*
+logs
