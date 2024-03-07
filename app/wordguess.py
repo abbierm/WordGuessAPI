@@ -10,6 +10,7 @@ from .words.words import words
 from .words.correct import correct_words
 from pydantic import BaseModel
 from typing import List, Optional
+from .models import User, Solver, Game
 
 
 #====================================================================
