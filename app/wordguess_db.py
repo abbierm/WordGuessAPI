@@ -19,8 +19,6 @@ class GuessFeedback(BaseModel):
     feedback: Optional[str] = None
 
 
-
-
 class GameData(BaseModel):
     game_id: str
     username: str
@@ -41,7 +39,7 @@ def _choose_word():
 def _validate_guess(guess) -> bool:
     if guess in correct_words:
         return True
-    return false
+    return False
 
 
 def _feedback(correct_word, guess):

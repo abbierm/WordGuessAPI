@@ -8,7 +8,7 @@ from app.models import User, Solver, Game
 from pydantic import BaseModel, ConfigDict, ValidationError
 import sqlalchemy as sa
 from sqlalchemy.exc import SQLAlchemyError
-from app.wordguess_db import create_game
+from app.wordguess_db import create_game, game_loop
 
 
 class Guess(BaseModel):
@@ -38,7 +38,7 @@ def start_game(username, solver_name):
             return bad_request('solver\'s name has already been created by another user, please try again with a solver name. ')
     #Creates Game
     new_game = create_game(user.id, solver.id)
-    return new_name
+    return new_game
 
 
 @bp.route('/guess', methods=['POST'])
