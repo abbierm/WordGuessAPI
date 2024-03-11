@@ -2,32 +2,13 @@
 # plays wordle with python wordle solvers
 # Clone of wordguess, adding a database
 
-
+from app import db
 from collections import Counter
-from datetime import datetime, timezone, timedelta
-from .models import User, Solver, Game
-from pydantic import BaseModel, ConfigDict, ValidationError
-from typing import List, Optional
+from .models import Game
 from .words.words import words
 from .words.correct import correct_words
-
-
-
-class GuessFeedback(BaseModel):
-    guess_number: int
-    guess: str
-    feedback: Optional[str] = None
-
-
-class GameData(BaseModel):
-    game_id: str
-    username: str
-    total_guesses: int
-    offical_guesses: int
-    correct_word: str
-    status: bool = True
-    result: Optional[str] = None
-    guesses: Optional[List[GuessFeedback]] = None
+import random
+import sqlalchemy as sa
 
 
 def _choose_word():
@@ -64,7 +45,6 @@ def _feedback(correct_word, guess):
     return ''.join(feedback_list)
 
 
-
 def create_game(user_id: int, solver_id: int) -> dict:
     new_word = _choose_word()
     
@@ -72,14 +52,13 @@ def create_game(user_id: int, solver_id: int) -> dict:
         user_id = user_id,
         solver_id = solver_id,
         correct_word = new_word,
-    )
+        )
     db.session.add(new_game)
     db.session.commit()
     new_game.get_token()
-    payload = self.create_payload()
+    payload = new_game.create_payload()
+    print(payload)
     return payload
-
-
 
 
 def game_loop(game_id, guess:str):
@@ -87,10 +66,10 @@ def game_loop(game_id, guess:str):
     if _validate_guess(guess) == False:
         return user_game.create_payload(message='Word not found in our dictionary.')
     feedback = _feedback(user_game.correct_word, guess)
-
-    # TODO: Update Database
+    print(feedback)
     user_game.update_game(guess, feedback)
     if user_game.status == False:
-        return user_game.create_payload(include_correct=True)
-    return user_game.create_payload()
+        return user_game.create_payload(include_correct=True,
+                                         include_feedback=True)
+    return user_game.create_payload(include_feedback=True)
     

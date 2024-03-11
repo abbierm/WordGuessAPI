@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import logging
 import os
 from pathlib import Path
@@ -7,24 +7,22 @@ import random
 import re
 import requests
 import sys
-import time
-from typing import Optional, List
+from typing import Optional
 from words.correct import correct_words
 
+
+# TODO: Logging all words to a file with the guess_dict
 
 #==========================================================================
 #    Logging
 #==========================================================================
 THIS_DIRECTORY = os.path.dirname(__file__)
 logging_file = str(Path(THIS_DIRECTORY, 'logs', 'game_log.log'))
-
 logger = logging.getLogger("regex_solver")
 handler = logging.FileHandler(logging_file)
 format = logging.Formatter("%(asctime)s: %(message)s")
-
 handler.setFormatter(format)
 logger.addHandler(handler)
-
 logger.setLevel(logging.INFO)
 
 
@@ -32,21 +30,28 @@ logger.setLevel(logging.INFO)
 #    Pydantic Models
 #==========================================================================
 
-class Feedback(BaseModel):
-    guess_number: int
-    guess: str
-    feedback: Optional[str] = None
-
 
 class GameData(BaseModel):
-    game_id: str
-    username: str
-    total_guesses: int
-    offical_guesses: int
-    correct_word: Optional[str] = None
+    game_id: int
+    token: str
+    token_expiration: datetime = None
+    user_id: int
+    solver_id: int
+    solver_name: str
     status: bool = True
+    guesses: int
+    guess: str
+    feedback: str
+    correct_word: str
+    message: str
     result: Optional[str] = None
-    guesses: Optional[List[Feedback]]
+    
+    
+class Guess(BaseModel):
+    game_id: int
+    token: str
+    guess: str
+    
 
 #==========================================================================
 #    Regex Solver Class
@@ -59,21 +64,25 @@ class RegexSolver:
 
         # API 
         self.payload: GameData = None
-        self.current_feedback: Feedback = None
+        self.token: Optional[str] = None
         self.game_id: str = None
         self.status: bool = True
 
         # Helpers to pick next word
         self.words = None
-        self.offical_guesses = 0
+        self.current_guess = None
+        self.guesses = 0
         self.payload: GameData = None
-        self.current_feedback: Feedback = None
+        self.feedback: None
         self.all_yellow = []
         self.grey_letters = [0, 1, 2, 3, 4]
         self.constructed_word = [0, 1, 2, 3, 4]
         self.yellow_letters = [0, 1, 2, 3, 4]
         self.regex_pattern_list = [0, 1, 2, 3, 4]
         self.regex_pattern = None
+        
+        # Used for logging purposes
+        self.guess_dict = {}
         
         # Stores total game data
         self.total_played = 0
@@ -98,12 +107,13 @@ class RegexSolver:
         self.regex_pattern_list = [0, 1, 2, 3, 4]
         self.status = True
         self.payload = None
-        self.current_feedback = None
+        self.feedback = None
         self.regex_pattern = ''
-        self.offical_guesses = 0
-        self.total_guesses = 0
+        self.guesses = 0
+        self.guess_dict = {}
+        self.current_guess = None
         
-
+        
 #==========================================================================
 #    Uses Feedback to pick the next word
 #==========================================================================
@@ -160,11 +170,11 @@ class RegexSolver:
 
     def _make_regex_pattern(self):
         # Updates green, yellow, and grey lists        
-        for i, feedback in enumerate(self.current_feedback.feedback):
-            letter = self.current_feedback.guess[i]
-            if feedback == "G":
+        for i, color in enumerate(self.feedback):
+            letter = self.current_guess[i]
+            if color == "G":
                 self.constructed_word[i] = letter
-            elif feedback == 'Y':
+            elif color == 'Y':
                 self.yellow_letters[i] = letter
                 self.all_yellow.add(letter)
             else:
@@ -176,7 +186,7 @@ class RegexSolver:
         # adding '\\w' to the spots with any integers
         the_end_pattern = ['\\w' if isinstance(thing, int) == True else thing for thing in self.regex_pattern_list]
         self.regex_pattern = ''.join(the_end_pattern)
-        logger.debug("New Pattern: %s from feedback: %s", self.regex_pattern, self.current_feedback.feedback)
+        logger.debug("New Pattern: %s from feedback: %s", self.regex_pattern, self.feedback)
         
 
     def _filter_words(self):
@@ -211,7 +221,7 @@ class RegexSolver:
 
 
     def pick_next_word(self) -> str:
-        if self.offical_guesses == 0:
+        if self.guesses == 0:
             return self._pick_best_first_word()
         self._make_regex_pattern()
         self._filter_words()
@@ -224,33 +234,43 @@ class RegexSolver:
 #==========================================================================
 #    api 
 #==========================================================================
+    def _unload_starting_payload(self):
+        self.token = self.payload.token
+        self.game_id = self.payload.game_id
+        self.token = self.payload.token
+    
+
     def _unload_payload(self):
         """
         Updates guess counts, current feedback and reports current status to the game-loop for flow control. 
         """
-        self.offical_guesses = self.payload.offical_guesses
-        self.total_guesses = self.payload.total_guesses
-        self.current_feedback = self.payload.guesses[-1]
+        self.guesses = self.payload.guesses
+        self.feedback = self.payload.feedback
         self.status = self.payload.status
-        logger.debug("for guess %s received feedback: [%s]", self.current_feedback.guess, self.current_feedback.feedback)
+        self.current_guess = self.payload.guess
+        self.guess_dict[self.guesses] = {'guess': self.current_guess, 'feedback': self.feedback}
+        
+        logger.debug("for guess %s received feedback: [%s]", self.current_guess, self.feedback)
         
     
     def start(self, url=None):
         if url is None:
-            url = f'http://127.0.0.1:5000/api/start/{self.username}'
+            url = f'http://127.0.0.1:5000/api/start/{self.username}/regex'
         r = requests.get(url)
+        print('we got this far')
         try:
             x = r.json()
-            self.game_id = x["game_id"]
-        except (requests.JSONDecodeError):
-            # TODO: Log Something
-            print(f"{r.text()}")
+            self.payload = GameData(**x)
+            self._unload_starting_payload()
+        except (TypeError, requests.JSONDecodeError):
+            print('this is an error')
+            #print(f"{r.text}")
             sys.exit()
     
 
     def guess(self, guess: str):
         url = 'http://127.0.0.1:5000/api/guess'
-        payload = {"game_id": self.game_id, "guess": guess}
+        payload = {"token": self.token, "game_id": self.game_id, "guess": guess}
         r = requests.post(url, json=payload)
         try:
             x = r.json()
@@ -263,12 +283,11 @@ class RegexSolver:
 #==========================================================================
 #    Updates Stats
 #==========================================================================
-    def _record_loss(self, file_name):
+    def _record_round(self, file_name):
         with open(file_name, 'a') as f:
             f.write(f"Round: {self.total_played} Correct Word: {self.payload.correct_word}\n", )
-            for i in self.payload.guesses:
-                f.write(f"Guess Number: {i.guess_number} Guess: {i.guess}    Feedback: {i.feedback}\n")
-            f.write("\n\n")
+            for i in range(self.guesses):
+                f.write(f'Guess Number: {i + 1}. guess: {self.guess_dict[i + 1]['guess']}, feedback: {self.guess_dict[i + 1]['feedback']}')
             
         
     def _calculate_win_average(self):
@@ -277,10 +296,10 @@ class RegexSolver:
 
     def _calculate_average_guesses(self):
         if self.wins == 1:
-            self.average_guesses = self.payload.offical_guesses
+            self.average_guesses = self.payload.guesses
         else:
             old_guess_sum = self.average_guesses * (self.wins - 1)
-            new_guess_sum = old_guess_sum + self.payload.offical_guesses
+            new_guess_sum = old_guess_sum + self.payload.guesses
             self.average_guesses = round((new_guess_sum / self.wins), 2)
         
 
@@ -293,7 +312,7 @@ class RegexSolver:
             self.losses += 1
         self._calculate_win_average()
         logger.info("Games Played: %d, Wins: %d, losses: %d", self.total_played, self.wins, self.losses)
-        logger.info("Valid Guesses: %d, Total Guesses: %d", self.offical_guesses, self.total_guesses)
+        logger.info("Total Guesses: %d", self.guesses)
         logger.info("Updated Win Average: %d, Updated Guess Average: %d", self.average_wins, self.average_guesses)
 
 
@@ -303,9 +322,9 @@ class RegexSolver:
         
     def _play_round(self):
         self.start()
-        while self.offical_guesses < 6:
-            new_guess = self.pick_next_word()
+        while self.guesses < 6:
             self._reset_lists()
+            new_guess = self.pick_next_word()
             self.guess(new_guess)
             self._unload_payload()
             if self.status == False:
@@ -317,7 +336,7 @@ class RegexSolver:
 
         #Logging and Documenting losses
         logger.info("Starting Regex-Solver session")
-        now = datetime.datetime.now().strftime("lost_log_%m-%d-%y_%H:%M.txt")
+        now = datetime.now().strftime("lost_log_%m-%d-%y_%H:%M.txt")
         new_file = Path(THIS_DIRECTORY, 'logs', now)
 
         # Gameplay
@@ -329,9 +348,7 @@ class RegexSolver:
             self.update_stats()
 
             logger.info("Results: \n %s", self.payload.model_dump(exclude="username"))
-            if self.payload.result == 'lost':
-                self._record_loss(new_file)
-
+            self._record_round(new_file)
             self.rounds -= 1
 
 
