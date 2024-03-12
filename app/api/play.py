@@ -7,7 +7,7 @@ from app.models import User, Solver, Game
 from pydantic import BaseModel, ConfigDict, ValidationError
 import sqlalchemy as sa
 from sqlalchemy.exc import SQLAlchemyError
-from app.wordguess_db import create_game, game_loop
+from app.wordguess import create_game, game_loop
 
 
 
@@ -21,28 +21,27 @@ class Guess(BaseModel):
 # Simple non-password way to create games, users, and solvers. 
 @bp.route('/start/<string:username>/<string:solver_name>', methods=["GET"])
 def start_game(username, solver_name):
-    # Checks for the User in the database
-    if User.validate_user(username) == False:
+    
+    # Finds user or creates a new user
+    user = db.session.scalar(db.select(User).where(User.username == username))
+    if user is None:
         user = User(username=username)
         db.session.add(user)
         db.session.commit()
-    else:
-        user = db.session.scalar(db.select(User).filter_by(
-                                            username=username))
-
+    
     # Checks for Solver
-    try:
-        solver = db.session.scalar(db.select(Solver).filter_by(
-                                        name=solver_name))
-        if Solver.validate_user_solver(username, solver.name) == False:
-            return bad_request('solver name already in user by another user.  Please choose a different name.')
-    except SQLAlchemyError:
+    solver = db.session.scalar(db.select(Solver).where(
+                                    Solver.name == solver_name))
+        # If the solver exists but doesn't belong to that user
+    if solver is None:
         solver = Solver(name=solver_name, user_id=user.id)
         db.session.add(solver)
         db.session.commit()
-   
-    #Creates Game
-    print('creating a new game')
+    else:
+        if solver.validate_user_solver(username, solver.name) == False:
+            return bad_request('solver name already in user by another user.  Please choose a different name.')
+    
+    # Creates the new Game
     new_game = create_game(user.id, solver.id)
     return new_game
 

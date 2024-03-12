@@ -1,106 +1,26 @@
 # wordle clone for python programs
 # plays wordle with python wordle solvers
+# Clone of wordguess, adding a database
 
-
-import random
+from app import db
 from collections import Counter
-import json
-import secrets
+from .models import Game
 from .words.words import words
 from .words.correct import correct_words
-from pydantic import BaseModel
-from typing import List, Optional
-from .models import User, Solver, Game
+import random
+import sqlalchemy as sa
 
 
-#====================================================================
-##  Game functions outside of a class bc the GAMES 
-##  dictionary is going to store all of the game info
-#====================================================================
-
-
-GAMES = {
-
-}
-
-class GuessFeedback(BaseModel):
-    guess_number: int
-    guess: str
-    feedback: Optional[str] = None   
-
-
-class GameData(BaseModel):
-    game_id: str
-    username: str
-    total_guesses: int
-    offical_guesses: int
-    correct_word: str
-    status: bool = True
-    # win/loss
-    result: Optional[str] = None
-    guesses: Optional[List[GuessFeedback]]
-
-
-def _create_id():
-    while True:
-        game_id = secrets.token_urlsafe()
-        # Makes sure the game_id isn't already a key for another game 
-        try:
-            GAMES[game_id]
-        except(KeyError):
-            return game_id
-
-
-def _validate_id(game_id) -> bool:
-    try:
-        GAMES[game_id]
-        return True
-    except(KeyError):
-        return False
-
-
-def _validate_status(game_id) -> bool:
-    if GAMES[game_id].status is True:
-        return True
-    else:
-        return False
-
-
-def _create_error_response(error, message) -> dict:
-    error_response = {
-        "error": error,
-        "message": message
-    }
-    return error_response
-
-
-def _choose_word() -> str:
+def _choose_word():
     length = len(words)
     x = random.randint(0, length - 1)
     return words[x]
-    
-    
-def _check_word(user_guess: str) -> bool:
-    if user_guess in correct_words:
+
+
+def _validate_guess(guess) -> bool:
+    if guess in correct_words:
         return True
     return False
-
-
-def _update_game(game_id, guess, feedback, valid=True, status=True, result=None):
-    """Generic Updater for the GAMES dictionary."""
-    game = GAMES[game_id]
-    game.total_guesses += 1
-    if valid:
-        game.offical_guesses += 1
-    game.status = status
-    game.result = result
-    new_guess = GuessFeedback(
-        guess_number = game.total_guesses,
-        guess = guess,
-        feedback = feedback
-    )
-    game.guesses.append(new_guess)
-    return
 
 
 def _feedback(correct_word, guess):
@@ -125,69 +45,30 @@ def _feedback(correct_word, guess):
     return ''.join(feedback_list)
 
 
-def create_game(username: str) -> str:
-    game_id, correct_word = _create_id(), _choose_word()
-    new_game = GameData(
-        game_id = game_id,
-        username = username,
-        total_guesses = 0,
-        offical_guesses = 0,
-        correct_word = correct_word,
-        status = True,
-        result = None,
-        guesses = []
-    )
-    GAMES[game_id] = new_game
-    return game_id
-
-
-def create_guess_payload(game_id):
-    """Takes out the correct word from the GAMES dict for the GAME. """
-    payload = GAMES[game_id].model_dump()
-    payload.pop("correct_word")
+def create_game(user_id: int, solver_id: int) -> dict:
+    new_word = _choose_word()
+    
+    new_game = Game(
+        user_id = user_id,
+        solver_id = solver_id,
+        correct_word = new_word
+        )
+    db.session.add(new_game)
+    db.session.commit()
+    new_game.get_token()
+    payload = new_game.create_payload()
     return payload
 
 
-def game_loop(game_id, guess):
-    # Validate game_id (token)
-    if not _validate_id(game_id):
-        message = f"Your game_id {game_id} is invalid"
-        return _create_error_response("game not found", message)
-
-    # Validates that game is still playable via status
-    if not _validate_status(game_id):
-        message = f"The game for the game_id: {game_id} has already finished and is no longer playable."
-        return _create_error_response("game status already complete", message)
+def game_loop(game_id, guess:str):
+    user_game = db.session.scalar(sa.select(Game).where(Game.id == game_id))
+    if _validate_guess(guess) == False:
+        return user_game.create_payload(message='Word not found in our dictionary.')
+    feedback = _feedback(user_game.correct_word, guess)
     
-    # Validates that guess is five characters
-    if len(guess) != 5:
-        message = f"{guess} is is invalid"
-        _update_game(game_id, guess, feedback=None, valid=False)
-        return _create_error_response("Guesses must be 5 characters", message)
-
-    # Checks if guess is a valid word
-    if not _check_word(guess):
-        # Doesn't count as a guess, sends back feedback as None
-        _update_game(game_id, guess, feedback=None, valid=False)
-        return create_guess_payload(game_id)
-        
-    feedback = _feedback(GAMES[game_id].correct_word, guess)
-
-    # Check if user won with feedback 'GGGGG'
-    if feedback == "GGGGG":
-        _update_game(game_id, guess, feedback, status=False, result="won")
-        return GAMES[game_id].model_dump()
+    user_game.update_game(guess, feedback)
+    if user_game.status == False:
+        return user_game.create_payload(
+                include_correct=True,include_feedback=True)
+    return user_game.create_payload(include_feedback=True)
     
-    # Ran out of guesses, after updating the games makes it 6 guesses
-    if GAMES[game_id].offical_guesses == 5:
-        _update_game(game_id, guess, feedback, status=False, result="lost")
-        return GAMES[game_id].model_dump()
-        
-    # guesses < 5 - Keep playing
-    _update_game(game_id, guess, feedback)
-    return create_guess_payload(game_id)
-    
-   
-
-
-

@@ -11,15 +11,17 @@ from typing import Optional
 from words.correct import correct_words
 
 
-# TODO: Logging all words to a file with the guess_dict
-
 #==========================================================================
 #    Logging
 #==========================================================================
 THIS_DIRECTORY = os.path.dirname(__file__)
-logging_file = str(Path(THIS_DIRECTORY, 'logs', 'game_log.log'))
+log_directory = Path(THIS_DIRECTORY, 'logs')
+if not os.path.exists(log_directory):
+    os.makedirs(log_directory)
+file_name = 'game_logs.logs'
+new_log_path = Path(log_directory, file_name)
 logger = logging.getLogger("regex_solver")
-handler = logging.FileHandler(logging_file)
+handler = logging.FileHandler(new_log_path)
 format = logging.Formatter("%(asctime)s: %(message)s")
 handler.setFormatter(format)
 logger.addHandler(handler)
@@ -44,7 +46,7 @@ class GameData(BaseModel):
     feedback: str
     correct_word: str
     message: str
-    result: Optional[str] = None
+    results: Optional[str] = None
     
     
 class Guess(BaseModel):
@@ -257,7 +259,7 @@ class RegexSolver:
         if url is None:
             url = f'http://127.0.0.1:5000/api/start/{self.username}/regex'
         r = requests.get(url)
-        print('we got this far')
+        
         try:
             x = r.json()
             self.payload = GameData(**x)
@@ -283,11 +285,11 @@ class RegexSolver:
 #==========================================================================
 #    Updates Stats
 #==========================================================================
-    def _record_round(self, file_name):
-        with open(file_name, 'a') as f:
-            f.write(f"Round: {self.total_played} Correct Word: {self.payload.correct_word}\n", )
-            for i in range(self.guesses):
-                f.write(f'Guess Number: {i + 1}. guess: {self.guess_dict[i + 1]['guess']}, feedback: {self.guess_dict[i + 1]['feedback']}')
+    # def _record_round(self, file_name):
+    #     with open(file_name, 'a') as f:
+    #         f.write(f"Round: {self.total_played} Correct Word: {self.payload.correct_word}\n", )
+    #         for i in range(self.guesses):
+    #             f.write(f'Guess Number: {i + 1}. guess: {self.guess_dict[i + 1]['guess']}, feedback: {self.guess_dict[i + 1]['feedback']}')
             
         
     def _calculate_win_average(self):
@@ -305,7 +307,7 @@ class RegexSolver:
 
     def update_stats(self):
         self.total_played += 1
-        if self.payload.result == 'won':
+        if self.payload.results == 'won':
             self.wins += 1
             self._calculate_average_guesses()
         else:
@@ -337,7 +339,7 @@ class RegexSolver:
         #Logging and Documenting losses
         logger.info("Starting Regex-Solver session")
         now = datetime.now().strftime("lost_log_%m-%d-%y_%H:%M.txt")
-        new_file = Path(THIS_DIRECTORY, 'logs', now)
+        #new_file = Path(THIS_DIRECTORY, 'logs', now)
 
         # Gameplay
         while self.rounds > 0:
@@ -348,7 +350,7 @@ class RegexSolver:
             self.update_stats()
 
             logger.info("Results: \n %s", self.payload.model_dump(exclude="username"))
-            self._record_round(new_file)
+            #self._record_round(new_file)
             self.rounds -= 1
 
 
@@ -362,7 +364,7 @@ class RegexSolver:
 
 def main():
     solver_instance = RegexSolver(username='hiro')
-    solver_instance.play(20)
+    solver_instance.play(100)
 
 
 
