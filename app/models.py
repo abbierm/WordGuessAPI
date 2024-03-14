@@ -75,7 +75,6 @@ class Game(db.Model):
     @staticmethod
     def check_token(token):
         user_game = db.session.scalar(sa.select(Game).where(Game.token == token))
-        print(user_game)
         if user_game is None:
             return False
         if user_game.token_expiration.replace(

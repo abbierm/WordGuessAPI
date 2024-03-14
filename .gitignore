@@ -12,3 +12,6 @@ flask_session/
 .logs/*
 logs
 app.db
+
+# personal notes specifically which tests tp write
+todo.txt
