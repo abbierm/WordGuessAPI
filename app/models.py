@@ -25,7 +25,23 @@ class Solver(db.Model):
     words_won: so.Mapped[int] = so.mapped_column(default=0)
     games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver')
 
- 
+    def to_dict(self):
+        payload = {
+            "id": self.id,
+            "name": self.name,
+            "user_id": self.user_id,
+            "words_played": self.words_played,
+            "words_won": self.words_won,
+        }
+        return payload
+
+    def update_stats(self, won: bool):
+        self.words_played += 1
+        if won == True:
+            self.words_won += 1
+        db.session.add(self)
+        db.session.commit()
+
     @staticmethod
     def validate_user_solver(username, solver_name) -> bool:
         user = db.session.scalar(sa.select(User).where(

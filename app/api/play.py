@@ -1,5 +1,4 @@
-from flask import request, url_for, jsonify
-#from app.wordguess import create_game, game_loop, GAMES, create_guess_payload
+from flask import request
 from app import db
 from app.api import bp
 from app.api.errors import bad_request
@@ -64,5 +63,3 @@ def make_guess():
     """
     response = game_loop(game_id, guess)
     return response
-
-

@@ -15,3 +15,4 @@ app.db
 
 # personal notes specifically which tests tp write
 todo.txt
+app/scripts.py

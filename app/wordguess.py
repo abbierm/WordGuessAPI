@@ -4,7 +4,7 @@
 
 from app import db
 from collections import Counter
-from .models import Game
+from .models import Game, Solver
 from .words.words import words
 from .words.correct import correct_words
 import random
@@ -68,7 +68,10 @@ def game_loop(game_id, guess:str):
     
     user_game.update_game(guess, feedback)
     if user_game.status == False:
+        # TODO: Update Solver Stats
+        solver = db.session.scalar(sa.select(Solver).where(Solver.id == user_game.solver_id))
+        solver.update_stats(user_game.results)
         return user_game.create_payload(
-                include_correct=True,include_feedback=True)
+                include_correct=True, include_feedback=True)
     return user_game.create_payload(include_feedback=True)
     
