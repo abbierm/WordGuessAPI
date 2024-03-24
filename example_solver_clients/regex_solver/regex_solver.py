@@ -18,7 +18,7 @@ THIS_DIRECTORY = os.path.dirname(__file__)
 log_directory = Path(THIS_DIRECTORY, 'logs')
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
-file_name = 'game_logs.logs'
+file_name = 'game_logs.log'
 new_log_path = Path(log_directory, file_name)
 logger = logging.getLogger("regex_solver")
 handler = logging.FileHandler(new_log_path)

@@ -5,6 +5,7 @@ import pytest
 from app import create_app, db
 from app.models import User, Solver, Game
 from config import Config
+from datetime import datetime, timezone, timedelta
 
 class TestConfig(Config):
     TESTING = True
@@ -63,11 +64,20 @@ def init_database(test_client):
     db.session.add(solver_3)
     db.session.commit()
 
-    # Adding Games
+    # Adding games to test
     game_1 = Game(user_id=1, solver_id=3, correct_word='loser', guesses=6, status=False, results=False)
     game_2 = Game(user_id=1, solver_id=3, correct_word='aisle', guesses=4, current_guess='aisle', current_feedback='GGGGG', status=False, results=True)
+
+    now = datetime.now(timezone.utc) + timedelta(seconds=36000)
+    game_3 = Game(user_id=1, solver_id=3, correct_word='tests', status=True, \
+                    guesses=2, token='unique_token_1', token_expiration=now)
+    game_4 = Game(user_id=2, solver_id=2, correct_word='tests', status=True, \
+                    guesses=4, token='unique_token_2', token_expiration=now)
+
     db.session.add(game_1)
     db.session.add(game_2)
+    db.session.add(game_3)
+    db.session.add(game_4)
     db.session.commit()
 
     yield
@@ -75,8 +85,7 @@ def init_database(test_client):
     # Test Stuff
 
     db.drop_all()
-    print('this happened')
-
-
     
+
+
 

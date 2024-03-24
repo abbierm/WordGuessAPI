@@ -4,8 +4,6 @@ from app.api import bp
 from app.api.errors import bad_request
 from app.models import User, Solver, Game
 from pydantic import BaseModel, ConfigDict, ValidationError
-import sqlalchemy as sa
-from sqlalchemy.exc import SQLAlchemyError
 from app.wordguess import create_game, game_loop
 
 
