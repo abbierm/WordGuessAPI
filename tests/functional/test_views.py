@@ -29,7 +29,7 @@ def test_lookup_solver(test_client, init_database):
 def test_lookup_solver_with_gamedata(test_client, init_database):
     """
     Given a flask app configed for testing
-    when '/api/lookup_solver/hiro' is requested ("GET")
+    WHEN a GET request via the url: '/api/lookup_solver/solver_3' 
     Then check if the response is valid
     """
     response = test_client.get('/api/lookup_solver/solver_3')
@@ -41,3 +41,14 @@ def test_lookup_solver_with_gamedata(test_client, init_database):
     assert x['words_played'] == 2
     assert x['words_won'] == 1
 
+
+def test_lookup_users_solvers(test_client, init_database):
+    """
+    GIVEN a flask app preconfigured with test data
+    WHEN a GET request via the url: '/api/lookup_user_solvers/a_user'
+    THEN check if returned json data is consistent with the initialized database
+    """
+    response = test_client.get('api/lookup_user_solvers/a_user')
+    assert response.status_code == 200
+    game_data = response.get_json()
+    assert game_data["user"]["username"] == 'a_user'

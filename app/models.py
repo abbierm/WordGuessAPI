@@ -13,6 +13,13 @@ class User(db.Model):
                                             back_populates='user')
     games: so.WriteOnlyMapped['Game'] = so.relationship(
                                             back_populates='user')
+    
+    def to_dict(self):
+        payload = {
+            "id": self.id,
+            "username": self.username,
+        }
+        return payload
 
 
 class Solver(db.Model):
