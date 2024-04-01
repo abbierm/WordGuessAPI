@@ -51,4 +51,6 @@ def test_lookup_users_solvers(test_client, init_database):
     response = test_client.get('api/lookup_user_solvers/a_user')
     assert response.status_code == 200
     game_data = response.get_json()
-    assert game_data["user"]["username"] == 'a_user'
+    assert game_data['user']['username'] == 'a_user'
+    assert game_data['solvers']['solver_1']['id'] == 1
+

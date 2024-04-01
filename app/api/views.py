@@ -35,7 +35,7 @@ def lookup_user(username: str):
         return solvers_payload
      
     for solver in solvers:
-        solvers_payload["solvers"][solver.name] = (solver.to_dict())
+        solvers_payload["solvers"][solver.name] = solver.to_dict()
     return solvers_payload
 
     

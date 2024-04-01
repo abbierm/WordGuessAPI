@@ -149,5 +149,3 @@ class Game(db.Model):
         if message != None:
             payload["message"] = message
         return payload
-
-    
