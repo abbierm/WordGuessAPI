@@ -5,7 +5,7 @@ body {
 
 
 
-/* Test layout2 to fix Nav-Bar */
+/* Nav-Bar */
 .container {
     width: 100%;
     height: 100%;
@@ -15,20 +15,24 @@ body {
     top: 0;
     display: flex;
     width: 100%;
-    height: 60px;
+    justify-content: center;
+
 }
 
 .navbar ul {
     display: flex;
     list-style: none;
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: center;
+    padding-left: 0;
 }
 
 .navbar ul li {
     margin: 0 1rem;
-    padding: .5rem;
+}
+
+.navbar ul li:first-child {
+    padding-left: 0;
 }
 
 .navbar ul li a {
@@ -38,10 +42,13 @@ body {
 }
 
 
+
+/* Title bar */
+
 .title {
     text-align: center;
-    margin: 1rem;
-    padding: 1rem;
+    margin: .5rem;
+    padding: .5rem;
     color: #17614a;
 }
 
@@ -72,3 +79,13 @@ body {
 }
 
 
+/* index */
+.intro {
+    text-align: center;
+}
+
+
+/* forms */
+.form-box {
+    text-align: center;
+}

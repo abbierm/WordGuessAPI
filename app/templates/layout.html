@@ -14,11 +14,16 @@
         <div class="container">
             <nav class="navbar">
                 <ul>
-                    <li><a href="/">WordGuess</a></li>
-                    <li><a href="/">Documentation</a></li>
-                    <li><a href="/">Account</li>
-                    <li><a href="/">Log in</a></li>
-                    <li><a href="/">Register</a></li>
+                    <li><a href="{{ url_for('main.index') }}">WordGuess</a></li>
+                    <li><a href="{{ url_for('main.documentation') }}">Documentation</a></li>
+                    
+                    {% if current_user.is_anonymous %}
+                    <li><a href="{{ url_for('auth.login') }}">Log in</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+                    {% else %}
+                    <li><a href="/account">Account</li>
+                    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    {% endif %}
                 </ul>
             </nav>
             <div class="flashbar">
