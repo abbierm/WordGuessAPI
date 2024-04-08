@@ -112,7 +112,6 @@ class Game(db.Model):
 
     @staticmethod
     def check_token(token):
-        print('I am printing stuff')
         user_game = db.session.scalar(sa.select(Game).where(Game.token == token))
         if user_game is None:
             return False

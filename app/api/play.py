@@ -22,9 +22,7 @@ def start_game(username, solver_name):
     # Finds user or creates a new user
     user = db.session.scalar(db.select(User).where(User.username == username))
     if user is None:
-        user = User(username=username)
-        db.session.add(user)
-        db.session.commit()
+        return bad_request('Username not registered to an account.  Please create an account online before playing. ')
     
     # Checks for Solver
     solver = db.session.scalar(db.select(Solver).where(

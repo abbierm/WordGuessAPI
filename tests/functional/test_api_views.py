@@ -3,8 +3,8 @@ This file (test_views.py) tests the view functions api for users to send "GET" r
 
 """
 
-from app import create_app, db
 from flask import current_app
+
 
 def test_db_connection(init_database):
     assert current_app.config["SQLALCHEMY_DATABASE_URI"]  == 'sqlite://'
@@ -12,7 +12,7 @@ def test_db_connection(init_database):
 
 def test_lookup_solver(test_client, init_database):
     """
-    Given a flask app configed for testing
+    GIVEN a flask app configed for testing
     when '/api/lookup_solver/hiro' is requested ("GET")
     Then check if the response is valid
     """

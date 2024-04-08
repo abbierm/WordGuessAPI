@@ -15,7 +15,8 @@ class TestConfig(Config):
 
 @pytest.fixture(scope='module')
 def new_user():
-    user = User(username='a_cool_username')
+    user = User(username='a_cool_username', email='aTestEmail@email.com')
+    user.set_password('insecurePassword')
     return user
 
 
@@ -46,12 +47,16 @@ def init_database(test_client):
     #db.drop_all()
     db.create_all()
     
-
     # Adding users
-    user_1 = User(username='a_user')
-    user_2 = User(username='second_user')
+    user_1 = User(username='a_user', email='test_email_user1@gmail.com')
+    user_1.set_password('testPassword1')
+    user_2 = User(username='second_user', email='test_email_user2@gmail.com')
+    user_2.set_password('testPassword2')
+    user_3  = User(username='test_user_3', email='test_user_3_@gmail.com')
+    user_3.set_password('testPassword3')
     db.session.add(user_1)
     db.session.add(user_2)
+    db.session.add(user_3)
     db.session.commit()
 
     # Adding solvers

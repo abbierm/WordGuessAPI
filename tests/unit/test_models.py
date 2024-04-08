@@ -6,36 +6,47 @@ from app.models import User, Solver, Game
 
 def test_adding_user():
     """
-    Creating a new User
-    then check the username
-
-    # TODO: After adding authentication will need to add password, email, etc. 
+    Given a User model
+    When a new User is created
+    Then check username, email, password hashing
+    AND check flask_login is_authenticated, is_active, and is_anonymous
+ 
     """
-    user = User(username='a_new_user')
+    user = User(username='a_new_user', email='testemail@email.com')
+    user.set_password('insecurepassword')
     assert user.username == 'a_new_user'
+    assert user.email == 'testemail@email.com'
+    assert user.password_hash != 'a_new_user'
+    assert user.is_authenticated
+    assert user.is_active
+    assert not user.is_anonymous
 
 
 
 def test_new_user_with_fixture(new_user):
     """
-    Using pytest fixture checking if the new user has the correct username.
-
-    # TODO: Once authentication is added will need to update this and the conftest file for password and email.
+    GIVEN a User model and new user
+    WHEN a new user is created
+    THEN check the email, username, password, 
+    AND check flask_login is_authenticated, is_active, and is_anonymous
     """
-
     assert new_user.username == 'a_cool_username'
-
+    assert new_user.email == 'aTestEmail@email.com'
+    assert new_user.password_hash != 'insecurePassword'
+    assert new_user.is_authenticated
+    assert new_user.is_active 
+    assert not new_user.is_anonymous
 
 
 def test_add_solver(new_user):
     """
-    Adding a new solver to the new_user text fixture and testing solver methods.
+    GIVEN a User model and new user
+    WHEN a solver is created
+    THEN check if the solver.user_id is the same as the new users
     """
-    u_id = new_user.id
-    new_solver = Solver(name='new_user_solver', user_id=u_id)
+    new_solver = Solver(name='new_user_solver', user_id=new_user.id)
     assert new_solver.name == 'new_user_solver'
-    assert new_solver.user_id == u_id
-    
+    assert new_solver.user_id == new_user.id
     
 
         
@@ -49,3 +60,15 @@ def test_add_game(new_user, new_solver):
     assert new_game.user_id == new_user.id
     assert new_game.solver_id == new_solver.id
     
+
+# TODO: test password hashing
+
+# TODO: test user to_dict functions
+
+# TODO: test game get token
+
+# TODO: Test update game function
+
+# TODO: Test creating payload 
+
+

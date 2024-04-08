@@ -13,7 +13,7 @@ def test_start(test_client, init_database):
     When '/api/start/test_user2/corgi_test_solver'
     Check if newgame payload is correct
     """
-    response = test_client.get('/api/start/test_user2/corgi_test_solver')
+    response = test_client.get('/api/start/test_user_3/corgi_test_solver')
     assert response.status_code == 200
     assert 'token' in response.text
     game_data = response.get_json()
@@ -28,7 +28,7 @@ def test_start_invalid_solver_name(test_client, init_database):
     WHEN 'api/start/new_user3/solver_1' is requested
     CHECK for correct error message
     """
-    response = test_client.get('/api/start/new_user3/solver_1')
+    response = test_client.get('/api/start/test_user_3/solver_1')
     assert response.status_code == 400
     game_data = response.get_json()
     assert game_data['message'] == 'solver name already in user by another user.  Please choose a different name.'
