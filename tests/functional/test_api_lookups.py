@@ -1,5 +1,5 @@
 """
-This file (test_views.py) tests the view functions api for users to send "GET" requests to view game history data about certain users and solvers.
+This file (test_api_lookups.py) tests the view functions api for users to send "GET" requests to view game history data about certain users and solvers.
 
 """
 
@@ -7,6 +7,10 @@ from flask import current_app
 
 
 def test_db_connection(init_database):
+    """
+    GIVEN a flask app configured for testing
+    THEN check if the sqlite uri is the correct one for testing
+    """
     assert current_app.config["SQLALCHEMY_DATABASE_URI"]  == 'sqlite://'
 
 

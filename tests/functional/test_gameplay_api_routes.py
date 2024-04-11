@@ -3,8 +3,6 @@
 This files specifically tests the gameplay (play.py) routes to start and make a guess to a game. 
 
 """
-import json
-
 
 
 def test_start(test_client, init_database):

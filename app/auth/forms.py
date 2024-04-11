@@ -22,7 +22,6 @@ class RegistrationForm(FlaskForm):
         'Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 
-
     def validate_username(self, username):
         user = db.session.scalar(sa.select(User).where(
             User.username == username.data))
@@ -35,5 +34,16 @@ class RegistrationForm(FlaskForm):
         if user is not None:
             return ValidationError('Please use a different email address.')
         
+
+class ResetPasswordRequestForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+        
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired()])
+    password2 = PasswordField(
+        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Reset Password')
 
 

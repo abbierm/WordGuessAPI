@@ -1,11 +1,14 @@
 from app import db, login
 from datetime import datetime, timezone, timedelta
+from time import time
 import secrets
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from typing import Optional
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+from flask import current_app
 
 
 class User(UserMixin, db.Model):
@@ -32,6 +35,37 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
+    def get_reset_password_token(self, expires_in=600):
+        return jwt.encode(
+            {'reset_password': self.id, 'exp': time() + expires_in},
+            current_app.config['SECRET_KEY'], algorithm='HS256')
+    
+    @staticmethod
+    def verify_reset_password_token(token):
+        try:
+            id = jwt.decode(token, current_app.config['SECRET_KEY'],
+                            algorithms=['HS256'])['reset_password']
+
+        except Exception:
+            print('exception')
+            return
+        return db.session.get(User, id)
+
+    
+    @staticmethod
+    def check_duplicate_username(new_username: str) -> bool:
+        """Returns true if there is already an account associated with new_username"""
+        if db.session.scalar(db.select(User).where(User.username == new_username)):
+            return True
+        return False
+    
+    @staticmethod
+    def check_duplicate_email(new_email: str) -> bool:
+        """Returns True is there is already an account associated with new_email."""
+        if db.session.scalar(db.select(User).where(User.email == new_email)):
+            return True
+        return False
+
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
