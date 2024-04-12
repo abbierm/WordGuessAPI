@@ -1,0 +1,13 @@
+Dear {{ user.username }},
+
+Thank you for your interest in WordGuess!!!
+
+In order to use our WordGuess API, you must verify your account by clicking on the following link
+
+{{ url_for('auth.verify_account', token=token, _external=True) }}
+
+If you did not create an account for WordGuess, please disregard this message. 
+
+Sincerly, 
+
+The v8_dev Team

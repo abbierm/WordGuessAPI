@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Account
+{% endblock title %}
+
+{% block main %}
+<div class="title-box">
+    <h1 class="title">Account</h1>
+</div>
+<div>
+    <p>Hello {{ user.username }}</p>
+</div>
+<div>
+    <a href="{{ url_for('auth.resend_confirmation') }}">Resend Confirmation</a>
+    <br>
+    <a href="{{ url_for('auth.reset_password_request') }}">Reset Password</a>
+</div>
+
+{% endblock main %}

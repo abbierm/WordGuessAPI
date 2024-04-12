@@ -14,13 +14,20 @@ from flask import current_app
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
-    solvers: so.WriteOnlyMapped['Solver'] = so.relationship(
-                                            back_populates='user')
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True,
                                              unique=True)
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
+    confirmed: so.Mapped[bool] = so.mapped_column(sa.Boolean(), default=False)
+    solvers: so.WriteOnlyMapped['Solver'] = so.relationship(
+                                            back_populates='user')
+    
     games: so.WriteOnlyMapped['Game'] = so.relationship(
                                             back_populates='user')
+    
+
+    #===========================================================================
+    # API user lookup
+    #===========================================================================
     
     def to_dict(self):
         payload = {
@@ -29,6 +36,10 @@ class User(UserMixin, db.Model):
         }
         return payload
     
+    #===========================================================================
+    # Password setting / hashing / resetting 
+    #===========================================================================
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -45,13 +56,31 @@ class User(UserMixin, db.Model):
         try:
             id = jwt.decode(token, current_app.config['SECRET_KEY'],
                             algorithms=['HS256'])['reset_password']
-
         except Exception:
-            print('exception')
+            return
+        return db.session.get(User, id)
+    
+    #===========================================================================
+    # Account Confirmation Token
+    #===========================================================================
+
+    def generate_confirmation_token(self, expires_in=600):
+        return jwt.encode(
+            {'confirm_email': self.id, 'exp': time() + expires_in},
+            current_app.config['SECRET_KEY'], algorithm='HS256')
+    
+    @staticmethod
+    def verift_account(token):
+        try:
+            id = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])['confirm_email']
+        except Exception:
             return
         return db.session.get(User, id)
 
-    
+
+    #===========================================================================
+    # Registration safeguards to prevent duplicates username/emails
+    #===========================================================================
     @staticmethod
     def check_duplicate_username(new_username: str) -> bool:
         """Returns true if there is already an account associated with new_username"""
@@ -69,6 +98,7 @@ class User(UserMixin, db.Model):
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
+
 
 
 class Solver(db.Model):

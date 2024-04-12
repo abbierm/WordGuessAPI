@@ -11,3 +11,13 @@ def send_password_reset_email(user):
         text_body = render_template('email/reset_password.txt', 
                                     user=user, token=token))
     
+
+def send_confirmation_email(user):
+    token = user.generate_confirmation_token()
+    print(token)
+    send_email(
+        subject = '[WordGuess] Confirm Your Account',
+        sender = 'abbie@v8_dev.com',
+        recipients = [user.email],
+        text_body = render_template('email/confirm_account.txt', 
+                                    user=user, token=token))
