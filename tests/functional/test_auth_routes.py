@@ -38,7 +38,6 @@ def test_valid_login(test_client, init_database):
     assert b'Log in' not in response.data
     
 
-
 def test_invalid_login(test_client, init_database):
     """
     GIVEN a flask app configured for testing 
