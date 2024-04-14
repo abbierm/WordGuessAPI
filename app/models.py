@@ -33,6 +33,7 @@ class User(UserMixin, db.Model):
         payload = {
             "id": self.id,
             "username": self.username,
+            "email": self.email
         }
         return payload
     
@@ -43,7 +44,7 @@ class User(UserMixin, db.Model):
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password) ->bool:
         return check_password_hash(self.password_hash, password)
     
     def get_reset_password_token(self, expires_in=600):
@@ -81,17 +82,20 @@ class User(UserMixin, db.Model):
     #===========================================================================
     # Registration safeguards to prevent duplicates username/emails
     #===========================================================================
+
     @staticmethod
     def check_duplicate_username(new_username: str) -> bool:
         """Returns true if there is already an account associated with new_username"""
-        if db.session.scalar(db.select(User).where(User.username == new_username)):
+        user = db.session.scalar(db.select(User).where(User.username == new_username))
+        if user:
             return True
         return False
-    
+              
     @staticmethod
     def check_duplicate_email(new_email: str) -> bool:
         """Returns True is there is already an account associated with new_email."""
-        if db.session.scalar(db.select(User).where(User.email == new_email)):
+        user = db.session.scalar(db.select(User).where(User.email == new_email))
+        if user:
             return True
         return False
 

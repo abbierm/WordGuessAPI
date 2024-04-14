@@ -6,6 +6,7 @@ from app import create_app, db
 from app.models import User, Solver, Game
 from config import Config
 from datetime import datetime, timezone, timedelta
+import sqlalchemy as sa
 
 class TestConfig(Config):
     TESTING = True
@@ -93,4 +94,8 @@ def init_database(test_client):
     
 
 
-
+@pytest.fixture(scope='function')
+def user_lookup(init_database):
+    """Returns user 'a_user' object so don't need to continious look up users when testing class methods in the ORM"""
+    user = db.session.scalar(db.select(User).where(User.id == 1))
+    return user

@@ -24,7 +24,7 @@ def test_login_page(test_client):
 
 def test_valid_login(test_client, init_database):
     """
-    GIVEN a flask app configured for testing and a database with valid test users
+    GIVEN a flask app configured for testing 
     WHEN '/auth/login' is requested (POST)
     THEN check if the response is valid
     """
@@ -36,3 +36,21 @@ def test_valid_login(test_client, init_database):
     assert response.status_code == 200
     assert b'Logout' in response.data
     assert b'Log in' not in response.data
+    
+
+
+def test_invalid_login(test_client, init_database):
+    """
+    GIVEN a flask app configured for testing 
+    WHEN '/auth/login' is requested (POST) with an invalid password
+    THEN check is the correct error is flashed on the 'auth/login' page
+    """
+    data = {
+        'username': 'a_user',
+        'password': 'tdsgflksdfjlkf'
+    }
+    logout = test_client.get('/auth/logout')
+    assert b'Log in' not in logout.data
+    response = test_client.post('/auth/login', data=data, follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Invalid username or password' in response.data

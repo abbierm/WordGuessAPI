@@ -61,9 +61,30 @@ def test_add_game(new_user, new_solver):
     assert new_game.solver_id == new_solver.id
     
 
-# TODO: test password hashing
+def test_pashword_hashing():
+    """
+    GIVEN a User databse model
+    CREATE a new User and set the password
+    CHECK if password is hashed and can't be pulled up
+    """
+    new_user = User(username='passwordHashingUser', email='testingEmail@test_email.com')
+    new_user.set_password('TestPassword2')
+    assert new_user.password_hash != 'TestPassword2'
+    assert new_user.check_password('TestPassword2') == True
+    assert new_user.check_password('TestPassword1') == False
 
-# TODO: test user to_dict functions
+
+def test_user_to_dict(new_user):
+    """
+    GIVEN a new user and the User database model
+    CALL the to_dict() method
+    CHECK if returned dictionary is correct
+    
+        Since this is checking the model itself and the new_user isn't added to the testing database, the user won't have an id number since that is added incrementally upon commiting the db session.
+    """
+    payload = new_user.to_dict()
+    assert payload['username'] == 'a_cool_username'
+    assert payload['email'] == 'aTestEmail@email.com'
 
 # TODO: test game get token
 
