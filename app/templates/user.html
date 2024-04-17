@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Word-Guess - {{ user.username }}
+{% endblock title %}
+
+{% block main %}
+<div class="page-container">
+    <div class="title">
+        <h1>Hello, {{ user.username }}!</h1>
+    </div>
+    <div class="table-title">
+        <h3>
+            Your Current Solvers
+        </h3>
+    </div>
+    <div class="table-container">
+        <div class="table-row heading">
+            <div class="row-item">Name</div>
+            <div class="row-item">ID #</div>
+            <div class="row-item">Words Played</div>
+            <div class="row-item">Words Solved</div>
+            <div class="row-item">Avg. Solved</div>
+            <div class="row-item">Reset</div>
+            <div class="row-item">Delete</div>
+        </div>
+        {% for solver in solvers %}
+        <div class="table-row">
+            <div class="row-item">{{ solver.name }}</div>
+            <div class="row-item">{{ solver.id }}</div>
+            <div class="row-item">{{ solver.words_played }}</div>
+            <div class="row-item">{{ solver.words_won }}</div>
+            <div class="row-item">{{ solver.avg }}%</div>
+            <div class="row-item">#TODO RESET BUTTON</div>
+            <div class="row-item">#TODO DELETE BUTTON</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+{% endblock main %}

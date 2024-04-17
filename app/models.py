@@ -113,6 +113,7 @@ class Solver(db.Model):
     user: so.Mapped[User] = so.relationship(back_populates='solvers')
     words_played: so.Mapped[int] = so.mapped_column(default=0)
     words_won: so.Mapped[int] = so.mapped_column(default=0)
+    avg: so.Mapped[float] = so.mapped_column(default=0)
     games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver')
 
     def to_dict(self):
@@ -129,6 +130,7 @@ class Solver(db.Model):
         self.words_played += 1
         if won == True:
             self.words_won += 1
+        self.avg = round(((self.words_won / self.words_played) * 100), 2)
         db.session.add(self)
         db.session.commit()
 

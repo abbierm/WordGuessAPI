@@ -363,7 +363,7 @@ class RegexSolver:
 #==========================================================================
 
 def main():
-    solver_instance = RegexSolver(username='hiro')
+    solver_instance = RegexSolver(username='v8-dev')
     solver_instance.play(100)
 
 
