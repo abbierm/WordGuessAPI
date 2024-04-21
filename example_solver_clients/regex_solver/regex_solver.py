@@ -364,7 +364,7 @@ class RegexSolver:
 
 def main():
     solver_instance = RegexSolver(username='v8-dev')
-    solver_instance.play(100)
+    solver_instance.play(500)
 
 
 
