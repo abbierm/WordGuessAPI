@@ -1,5 +1,9 @@
+# slice_burn.py is an example WordGuess solver that
+# uses a culling and letters-remained stretegy to 
+# pick the next word
+
 from collections import Counter
-from datetime import datetime
+from datetime import date
 import logging
 import os
 from pathlib import Path
@@ -13,13 +17,16 @@ from typing import Optional
 URL = 'http://127.0.0.1:5000/'
 
 
-#===============================
-#     logger
-#===============================
+# =========================================================================
+# Logging
+# =========================================================================
 THIS_DIRECTORY = os.path.dirname(__file__)
-file_name = 'logs/' + 'game_logs.log'
+log_directory = Path(THIS_DIRECTORY, 'logs')
+if not os.path.exists(log_directory):
+    os.makedirs(log_directory)
+file_name = f'game_logs_{date.today().strftime("%m-%d")}.log'
 logger = logging.getLogger('SliceAndBurnSolver')
-log_path = Path(THIS_DIRECTORY, file_name)
+log_path = Path(log_directory, file_name)
 handler = logging.FileHandler(log_path)
 format = logging.Formatter("%(asctime)s: %(message)s")
 handler.setFormatter(format)
@@ -27,8 +34,9 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 
-
-
+# =========================================================================
+#     Slice and Burn Solver Class
+# =========================================================================
 class SliceBurn:
     def __init__(self):
         self.username = 'v8-dev'
@@ -36,73 +44,68 @@ class SliceBurn:
         self.rounds: int = None
         self.current_round = 0
         self.words: Optional[set] = None
-        self.guess_feedback: dict = {}
-        self.current_payload: dict = None
-        self.won: bool = False
+        self.guesses: dict = {}
+        self.results: Optional[str] = None
 
         # Gameplay
         self.playing = True
         self.token = None
         self.game_id = None
-        self.guesses = 0
+        self.guess_count = 0
         self.current_guess: str = None
         self.feedback: str = None
 
         # Helpers
         self.green_letters = [0, 1, 2, 3, 4]
         self.constructed_word = [0, 1, 2, 3, 4]
-        
         self.grey_letters = [0, 1, 2, 3, 4]
         self.grey_letter_set = set()
-
         self.yellow_letters = [0, 1, 2, 3, 4]
         self.yellow_letter_set = set()
-        
         self.counts: list[tuple] = None
         self.letter_scores = {}
         
-
         # Stats
         self.words_played = 0
         self.words_won = 0
         self.avg_won: float = None
-        self.avg_guesses: float = None
-        # Using guess_total because it is easier to calculate guess avg 
+        self.avg_guesses: float = None 
         self.guess_total = 0
     
 
-        
-#================================================
+# =========================================================================
 # API requests and parsing
-#================================================        
+# =========================================================================    
     def _parse_start_payload(self, json: dict):
         """Gets game info and adds to instance variables"""
         self.game_id = json['game_id']
         self.token = json['token']
-        self.current_payload = json       
+           
 
+    def _parse_guess_payload(self, payload: dict):
+        self.guess_count = int(payload['guess_count'])
+        self.feedback = payload["guesses"][str(self.guess_count)]["feedback"]
+        self.guesses = payload["guesses"]
+        self.playing = payload["status"]
 
-    def _parse_guess_payload(self, json: dict):
-        if self.token != json['token']:
-            logger.debug('Incorrect Token received for round %i', self.current_round)
-            sys.exit()
-        self.current_payload = json
-        self.guesses = int(json['guesses'])
-        self.feedback = json["feedback"]
-        self.playing = json["status"]
-        logger.debug("Guess # %i, Received feedback: %s Current Guess: %s", self.guesses, self.feedback, self.current_guess)
-        logger.debug("Current status: %s", self.playing)
+        logger.info("Guess # %i, Current Guess: %s, Current Feedback: %s, status %s", self.guess_count, self.current_guess, self.feedback, self.playing)
+        
+        if self.playing == False:
+            self.results = payload["results"]
+            if self.results == 'lost':
+                logger.info("Correct Word: %s", payload["correct_word"])
 
+        
 
     def _start_game(self):
         url = URL + f'/api/start/{self.username}/{self.solvername}'
         r = get(url)
         try:
             self._parse_start_payload(r.json())
-            logger.debug("New Game ID %i", self.game_id)
         except JSONDecodeError as e:
-            logger.debug("Starting game request error: %s", e)
+            logger.warning("Starting game request error: %s", e)
             sys.exit()
+
 
     def _post_guess(self):
         payload = {
@@ -121,9 +124,9 @@ class SliceBurn:
             sys.exit()
 
 
-#=========================================================================
+# =========================================================================
 # Logic that picks next word
-#=========================================================================
+# =========================================================================
     def _process_feedback(self):
         """Uses feedback and current guess to create helpers that cull words."""
         self.grey_letters = [0, 1, 2, 3, 4]
@@ -174,7 +177,6 @@ class SliceBurn:
                 counts.update(letter)
         self.counts = counts.most_common()
         
-        
     def _update_letter_scores(self):
         """Gives each letter a score based on its frequency in the words that are left."""
         self.letter_scores = {}
@@ -184,7 +186,6 @@ class SliceBurn:
             start_value -= 1
         
             
-
     def _pick_highest_score(self):
         """Gives each word a score and picks the word with the highest score."""
         word_scores = {}
@@ -198,8 +199,7 @@ class SliceBurn:
         
 
     def _pick_word(self):    
-        # Seemed like a good first guess?
-        if self.guesses == 0:
+        if self.guess_count == 0:
             self.current_guess = 'tears'
         else:
             self._process_feedback()
@@ -209,24 +209,23 @@ class SliceBurn:
             self._pick_highest_score()
 
     
-#=============================================
+# =========================================================================
 # Update Stats
-#=============================================    
+# =========================================================================
     def _process_results(self):
         self.words_played += 1
-        if self.current_payload['results'] == 'won':
-            self.won = True
+        if self.results == 'won':
             self.words_won += 1
-            self.guess_total += self.guesses
+            self.guess_total += self.guess_count
             self.avg_guesses = round((self.guess_total / self.words_won), 2)
-        else:
-            self.won = False
         self.avg_won = round(((self.words_won / self.words_played) * 100), 2)
+        logger.debug("Round %i results %s, Words Won: %i, Avg Guesses: %f, Avg Wins: %f", self.current_round, self.results, self.words_won, self.avg_guesses, self.avg_won)
         
-#=============================================
+        
+
+# =========================================================================
 # Reset Gameplay Helpers
-#=============================================
-    
+#==========================================================================
     def _reset_helpers(self):
         self.words = set(correct_words[:])
         self.green_letters = [0, 1, 2, 3, 4]
@@ -236,7 +235,7 @@ class SliceBurn:
         self.yellow_letters = [0, 1, 2, 3, 4]
         self.yellow_letter_set = set()
         self.playing = True
-        self.guesses = 0
+        self.guess_count = 0
         self.current_guess = None
         self.feedback = None
         self.counts = None
@@ -244,36 +243,35 @@ class SliceBurn:
         self.won = False
         self.current_payload = {}
 
-# ===========================================================================
+
+# =========================================================================
 #   Gameplay - Loops
-# ===========================================================================
+# =========================================================================
     def _play_one_game(self):
         """Plays one game (trying to guess one 5 letter word in 5 guesses)"""
         self._start_game()
         while self.playing == True:
             self._pick_word()
-            logger.debug("Next Guess: %s", self.current_guess)
             self._post_guess()
         self._process_results()
-        logger.info("END OF ROUND: %i RESULTS", self.current_round)
-        logger.info("Guess Feedback: %s", self.guess_feedback)
-        logger.debug("Words played: %i, Words won: %i", self.words_played, self.words_won)
-        logger.debug("Avg won: %f, Avg guesses: %f", self.avg_won, self.avg_guesses)
-
-    
+        
+        
     def play(self, rounds: int = 250):
-        logger.debug("Starting new WordGuess session")
+        logger.info("Starting new WordGuess session")
         self.rounds = rounds     
-        while self.current_round <= rounds:
+        while self.current_round < rounds:
             self._reset_helpers()
             self.current_round += 1
-            logger.debug("Starting round %i of %i", \
-                        self.current_round, self.rounds)
+            logger.info("Starting round %i of %i", self.current_round, self.rounds)
             self._play_one_game()
-    
+
+
+# =========================================================================
+# Main Program
+# =========================================================================
 def main():
     new_slice_instance = SliceBurn()
-    new_slice_instance.play(500)
+    new_slice_instance.play(100)
 
 if __name__ == '__main__':
     main()

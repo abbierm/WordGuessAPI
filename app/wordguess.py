@@ -68,7 +68,6 @@ def game_loop(game_id, guess:str):
     
     user_game.update_game(guess, feedback)
     if user_game.status == False:
-        # TODO: Update Solver Stats
         solver = db.session.scalar(sa.select(Solver).where(Solver.id == user_game.solver_id))
         solver.update_stats(user_game.results)
         return user_game.create_payload(

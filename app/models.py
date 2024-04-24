@@ -24,7 +24,6 @@ class User(UserMixin, db.Model):
     games: so.WriteOnlyMapped['Game'] = so.relationship(
                                             back_populates='user')
     
-
     #===========================================================================
     # API user lookup
     #===========================================================================
@@ -78,7 +77,6 @@ class User(UserMixin, db.Model):
             return
         return db.session.get(User, id)
 
-
     #===========================================================================
     # Registration safeguards to prevent duplicates username/emails
     #===========================================================================
@@ -99,10 +97,10 @@ class User(UserMixin, db.Model):
             return True
         return False
 
+
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
-
 
 
 class Solver(db.Model):
@@ -157,9 +155,9 @@ class Game(db.Model):
     user: so.Mapped[User] = so.relationship(back_populates='games')
     solver: so.Mapped[Solver] = so.relationship(back_populates='games')
     correct_word: so.Mapped[str] = so.mapped_column(sa.String(10))
-    guesses: so.Mapped[int] = so.mapped_column(default=0)
-    current_guess: so.Mapped[Optional[str]] = so.mapped_column(sa.String(10))
-    current_feedback: so.Mapped[Optional[str]] = so.mapped_column(sa.String(10))
+    guess_count: so.Mapped[int] = so.mapped_column(default=0)
+    guesses: so.Mapped[Optional[str]] = so.mapped_column(sa.String(40), default='')
+    feedback: so.Mapped[Optional[str]] = so.mapped_column(sa.String(40), default='')
     # True is active, false is inactive
     status: so.Mapped[bool] = so.mapped_column(default=True)
     # True is won, False is Lost
@@ -192,14 +190,17 @@ class Game(db.Model):
         return True
     
     def update_game(self, guess, feedback):
-        """ Updates the database."""
-        self.guesses += 1
-        self.current_guess = guess
-        self.current_feedback = feedback
+        self.guess_count += 1
+        if self.guess_count == 1:
+            self.feedback = feedback
+            self.guesses = guess
+        else:
+            self.feedback = "%s, %s" % (self.feedback, feedback)
+            self.guesses = "%s, %s" % (self.guesses, guess)
         if feedback == "GGGGG":
             self.status = False
             self.results = True
-        elif self.guesses == 6:
+        elif self.guess_count == 6:
             self.status = False
             self.results = False
         db.session.add(self)
@@ -214,16 +215,20 @@ class Game(db.Model):
             'solver_id': self.solver_id,
             'solver_name': self.solver.name,
             'status': self.status,
-            'guesses': self.guesses,
-            'guess': 'None',
-            'feedback': 'N/A',
+            'guess_count': self.guess_count,
+            'guesses': {},
             'correct_word': '*****',
             'message': 'None',
             'results': 'None'
         }
+        
         if include_feedback == True:
-            payload["guess"] = self.current_guess
-            payload["feedback"] = self.current_feedback
+            guess_list = self.guesses.split(', ')
+            feedback_list = self.feedback.split(', ')
+            feedback_dict = {}
+            for i in range(len(guess_list)):
+                feedback_dict[i + 1] = {"guess": guess_list[i], "feedback": feedback_list[i]}
+            payload["guesses"] = feedback_dict
         if include_correct == True:
             payload["correct_word"] = self.correct_word
             if self.results == True:
