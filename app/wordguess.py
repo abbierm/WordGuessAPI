@@ -49,7 +49,6 @@ def create_game(user_id: int, solver_id: int) -> dict:
     new_word = _choose_word()
     
     new_game = Game(
-        user_id = user_id,
         solver_id = solver_id,
         correct_word = new_word
         )

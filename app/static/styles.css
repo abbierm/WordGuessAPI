@@ -131,3 +131,24 @@ body {
     justify-content: center;
     align-items: center;
 }
+
+input[type=submit] {
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 13px;
+    min-width: 80px;
+    font-weight: 500;
+    border-color: none;
+}
+
+ .reset-button {
+    background-color: #17614a;
+    color: white;
+}
+
+.delete-button {
+    background-color: #af4d66;
+    color: white;
+}

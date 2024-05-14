@@ -39,7 +39,6 @@ class GameData(BaseModel):
     game_id: int
     token: str
     token_expiration: datetime = None
-    user_id: int
     solver_id: int
     solver_name: str
     status: bool = True
@@ -338,7 +337,7 @@ class RegexSolver:
 #==========================================================================
 def main():
     solver_instance = RegexSolver(username='v8-dev')
-    solver_instance.play(10)
+    solver_instance.play(200)
 
 if __name__ == "__main__":
     main()

@@ -11,6 +11,7 @@ import jwt
 from flask import current_app
 
 
+
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
@@ -19,10 +20,9 @@ class User(UserMixin, db.Model):
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
     confirmed: so.Mapped[bool] = so.mapped_column(sa.Boolean(), default=False)
     solvers: so.WriteOnlyMapped['Solver'] = so.relationship(
-                                            back_populates='user')
+                                        back_populates='user', cascade='all, delete-orphan', passive_deletes=True)
     
-    games: so.WriteOnlyMapped['Game'] = so.relationship(
-                                            back_populates='user')
+   
     
     #===========================================================================
     # API user lookup
@@ -112,7 +112,9 @@ class Solver(db.Model):
     words_played: so.Mapped[int] = so.mapped_column(default=0)
     words_won: so.Mapped[int] = so.mapped_column(default=0)
     avg: so.Mapped[float] = so.mapped_column(default=0)
-    games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver')
+    games: so.WriteOnlyMapped['Game'] = so.relationship(
+                        back_populates='solver', cascade='all, delete-orphan',
+                        passive_deletes=True)
 
     def to_dict(self):
         payload = {
@@ -125,6 +127,7 @@ class Solver(db.Model):
         return payload
 
     def update_stats(self, won: bool):
+        """Updates stats after a game.  Not used for a clean refresh."""
         self.words_played += 1
         if won == True:
             self.words_won += 1
@@ -141,18 +144,24 @@ class Solver(db.Model):
         if user.id != solver.user_id:
             return False
         return True
+    
+    def reset_games(self):
+        """Deletes all of the games for this solver and updates their stats"""
+        db.session.execute(sa.delete(Game).where(Game.solver_id == self.id))
+        self.words_played = 0
+        self.avg = 0
+        self.words_won = 0
+        db.session.add(self)
+        db.session.commit()
 
 
 class Game(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    user_id: so.Mapped[int] = so.mapped_column(
-                                        sa.ForeignKey(User.id),index=True)
     solver_id: so.Mapped[int] = so.mapped_column(
                                         sa.ForeignKey(Solver.id),index=True)
     token: so.Mapped[Optional[str]] = so.mapped_column(
                                         sa.String(32),index=True, unique=True)
     token_expiration: so.Mapped[Optional[datetime]]
-    user: so.Mapped[User] = so.relationship(back_populates='games')
     solver: so.Mapped[Solver] = so.relationship(back_populates='games')
     correct_word: so.Mapped[str] = so.mapped_column(sa.String(10))
     guess_count: so.Mapped[int] = so.mapped_column(default=0)
@@ -211,7 +220,6 @@ class Game(db.Model):
             'game_id': self.id,
             'token': self.token,
             'token_expiration': self.token_expiration.isoformat(),
-            'user_id': self.user_id,
             'solver_id': self.solver_id,
             'solver_name': self.solver.name,
             'status': self.status,
@@ -238,3 +246,4 @@ class Game(db.Model):
         if message != None:
             payload["message"] = message
         return payload
+

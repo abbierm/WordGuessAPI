@@ -21,8 +21,8 @@
             <div class="row-item">Words Played</div>
             <div class="row-item">Words Solved</div>
             <div class="row-item">Avg. Solved</div>
-            <div class="row-item">Reset</div>
-            <div class="row-item">Delete</div>
+            <div class="row-item"></div>
+            <div class="row-item"></div>
         </div>
         {% for solver in solvers %}
         <div class="table-row">
@@ -31,10 +31,29 @@
             <div class="row-item">{{ solver.words_played }}</div>
             <div class="row-item">{{ solver.words_won }}</div>
             <div class="row-item">{{ solver.avg }}%</div>
-            <div class="row-item">#TODO RESET BUTTON</div>
-            <div class="row-item">#TODO DELETE BUTTON</div>
+            
+            <div class="row-item">
+                <form action="{{url_for('main.reset_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset all the data on {{ solver.name }}');">
+                    <input type="hidden" value="{{ solver.id }}" name="solver">
+                    <input type="submit" class="reset-button" value="Reset Solver">
+                </form>
+            </div>
+            <div class="row-item">
+                <form action="{{url_for('main.delete_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to delete {{ solver.name }}?  This is permanent and cannot be undone?');">
+                    <input type="hidden" value="{{ solver.id }}" name="solver">
+                    <input type="submit" class="delete-button" value="Delete Solver">
+                </form>
+            </div>
+            
         </div>
         {% endfor %}
+        <div class="table-row">
+            <div class="row-item">
+                <button class="reset-button">
+                    Register A New Solver
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
