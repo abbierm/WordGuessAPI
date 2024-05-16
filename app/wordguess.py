@@ -45,7 +45,7 @@ def _feedback(correct_word, guess):
     return ''.join(feedback_list)
 
 
-def create_game(user_id: int, solver_id: int) -> dict:
+def create_game(solver_id: int) -> dict:
     new_word = _choose_word()
     
     new_game = Game(

@@ -6,7 +6,6 @@ from app import db
 from app.models import User, Solver, Game
 
 
-
 @bp.route('/', methods=["GET"])
 def index():
     if current_user.is_authenticated:
@@ -14,11 +13,9 @@ def index():
     else:
         return render_template('index.html')
     
-
 @bp.route('/documentation', methods=["GET"])
 def documentation():
     return render_template("/documentation.html")
-
 
 
 @bp.route('/user/<username>', methods=["GET", 'POST'])

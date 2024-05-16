@@ -1,10 +1,10 @@
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import current_user, login_user, logout_user, login_required
 from app.auth import bp
-from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm
+from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm, RegisterSolver
 import sqlalchemy as sa
 from app import db
-from app.models import User
+from app.models import User, Solver
 from .email import send_password_reset_email, send_confirmation_email
 
 
@@ -111,3 +111,17 @@ def reset_password(token):
 def account():
     if current_user.is_authenticated:
         return render_template('auth/account.html', user=current_user)
+
+
+@bp.route('/register_solver', methods=["GET", "POST"])
+@login_required
+def register_solver():
+    form = RegisterSolver()
+    if form.validate_on_submit():
+        user_id = current_user.id
+        new_solver = Solver(name=form.name.data, user_id=user_id)
+        db.session.add(new_solver)
+        db.session.commit()
+        flash(f'Congratulations! {new_solver.name} has now been created!  To start playing, go to the solver page from your homepage and click the link to create the new api key!!!')
+        return redirect(url_for('main.user', username=current_user.username))
+    return render_template('auth/register_solver.html', form=form)

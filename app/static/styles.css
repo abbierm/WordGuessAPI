@@ -1,6 +1,6 @@
 
 body {
-    font-family: nunito-sans,-apple-system,BlinkMacSystemFont,segoe ui,Roboto,Oxygen-Sans,Ubuntu,Cantarell,helvetica neue,sans-serif;
+    font-family: Oxygen, monospace, nunito-sans,-apple-system,BlinkMacSystemFont,segoe ui,Roboto,Oxygen-Sans,Ubuntu,Cantarell,helvetica neue,sans-serif;
 }
 
 
@@ -37,7 +37,7 @@ body {
 .navbar ul li a {
     text-decoration: none;
     color: black;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 
@@ -56,11 +56,15 @@ body {
     list-style-type: none;
     text-align: center;
     margin: 10px;
+    color: white;
+    font-weight: 500;
+    font-size: 16;
 }
 .flashbar li {
-    background-color: #70f8c5;
-    opacity: 25%;
+    background-color: #4396a8;
+    opacity: 75%;
     padding: 10px;
+   
 }
 
 
@@ -96,6 +100,8 @@ body {
     margin: 10px;
     font-weight: bold;
     color: #17614a;
+    font-family: "Oxygen";
+    font-style: normal;
 }
 
 .table-container {
@@ -114,13 +120,15 @@ body {
     border-bottom: 1px solid black;
     justify-content: center;
     align-items: center;
-    min-height: 30px;
+    min-height: 40px;
 }
 
 .heading {
     background-color: #ececec;
     color: #3e3e3e;
-    font-weight: bold;
+    font-family: "Oxygen", sans-serif;
+    font-weight: 700;
+    font-style: normal;
 }
 
 .row-item {
@@ -141,14 +149,8 @@ input[type=submit] {
     min-width: 80px;
     font-weight: 500;
     border-color: none;
+    color: white;
+    background-color: #22916e;
 }
 
- .reset-button {
-    background-color: #17614a;
-    color: white;
-}
-
-.delete-button {
-    background-color: #af4d66;
-    color: white;
-}
+/* Auth Forms */

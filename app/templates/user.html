@@ -41,7 +41,7 @@
             <div class="row-item">
                 <form action="{{url_for('main.delete_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to delete {{ solver.name }}?  This is permanent and cannot be undone?');">
                     <input type="hidden" value="{{ solver.id }}" name="solver">
-                    <input type="submit" class="delete-button" value="Delete Solver">
+                    <input type="submit" style="background-color: #dd396d" value="Delete Solver">
                 </form>
             </div>
             
@@ -49,9 +49,10 @@
         {% endfor %}
         <div class="table-row">
             <div class="row-item">
-                <button class="reset-button">
-                    Register A New Solver
-                </button>
+                <form action="{{url_for('auth.register_solver') }}" method="GET">
+                    <input type="submit" class="reset-button" value="Register a New Solver" >
+                </form>
+                
             </div>
         </div>
     </div>

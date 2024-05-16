@@ -23,7 +23,6 @@ class User(UserMixin, db.Model):
                                         back_populates='user', cascade='all, delete-orphan', passive_deletes=True)
     
    
-    
     #===========================================================================
     # API user lookup
     #===========================================================================
@@ -70,7 +69,7 @@ class User(UserMixin, db.Model):
             current_app.config['SECRET_KEY'], algorithm='HS256')
     
     @staticmethod
-    def verift_account(token):
+    def verify_account(token):
         try:
             id = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])['confirm_email']
         except Exception:
@@ -98,24 +97,31 @@ class User(UserMixin, db.Model):
         return False
 
 
+
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
+
 
 
 class Solver(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
     user_id: so.Mapped[int] = so.mapped_column(
-                                            sa.ForeignKey(User.id), index=True)
+                                    sa.ForeignKey(User.id), index=True)
     user: so.Mapped[User] = so.relationship(back_populates='solvers')
     words_played: so.Mapped[int] = so.mapped_column(default=0)
     words_won: so.Mapped[int] = so.mapped_column(default=0)
     avg: so.Mapped[float] = so.mapped_column(default=0)
-    games: so.WriteOnlyMapped['Game'] = so.relationship(
-                        back_populates='solver', cascade='all, delete-orphan',
-                        passive_deletes=True)
+    games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver',
+                            cascade='all, delete-orphan', passive_deletes=True)
+    api_key: so.Mapped[Optional[str]] = so.mapped_column(
+                                    sa.String(32), index=True, unique=True, nullable=True)
+    
 
+    #===========================================================================
+    # API 
+    #===========================================================================
     def to_dict(self):
         payload = {
             "id": self.id,
@@ -125,7 +131,22 @@ class Solver(db.Model):
             "words_won": self.words_won,
         }
         return payload
+    
+    def make_api_key(self) -> str:
+        self.api_key = secrets.token_hex(16)
+        db.session.add(self)
+        db.commit()
+        return self.api_key
+    
+    @staticmethod
+    def get_solver(api_key: str):
+        """Returns solver instance or None"""
+        return db.session.scalar(sa.select(Solver).where(Solver.api_key == api_key))
+        
 
+    #===========================================================================
+    # Gameplay stat Functions 
+    #===========================================================================
     def update_stats(self, won: bool):
         """Updates stats after a game.  Not used for a clean refresh."""
         self.words_played += 1
@@ -153,6 +174,7 @@ class Solver(db.Model):
         self.words_won = 0
         db.session.add(self)
         db.session.commit()
+
 
 
 class Game(db.Model):
@@ -219,7 +241,6 @@ class Game(db.Model):
         payload = {
             'game_id': self.id,
             'token': self.token,
-            'token_expiration': self.token_expiration.isoformat(),
             'solver_id': self.solver_id,
             'solver_name': self.solver.name,
             'status': self.status,

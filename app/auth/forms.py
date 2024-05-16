@@ -3,7 +3,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, ValidationError, Email, EqualTo
 import sqlalchemy as sa
 from app import db
-from app.models import User
+from app.models import User, Solver
 
 
 
@@ -47,3 +47,11 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('Reset Password')
 
 
+class RegisterSolver(FlaskForm):
+    name = StringField('Solver Name', validators=[DataRequired()])
+    submit = SubmitField('Register Solver')
+
+    def validate_solver_not_duplicated(self, name):
+        solver = db.session.scalar(sa.select(Solver).where(Solver.name == name))
+        if solver is not None:
+            return ValidationError(f'Please use s different name, {name} is already being used.')

@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Login
+{% endblock %}
+
+{% block main %}
+<div class="title-box">
+    <h1 class="title">Register a New Solver</h1>
+</div>
+<p>After you are done completing this form, you should see your new Solver on your homepage inside the table.  You can access that solver's page by clicking the name and can generate a new api_key there!!!</p>
+<div class="form-box">
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.name.label }}<br>
+            {{ form.name(size=32) }}
+            {% for error in form.name.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+</div>
+{% endblock %}
