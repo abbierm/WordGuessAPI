@@ -10,6 +10,11 @@ import sys
 from typing import Dict, Optional
 from words.correct import correct_words
 
+API_KEY = 'd012ba84c1bb688b252ad6ec749084a1'
+USER_ID = 1
+START_URL = 'http://127.0.0.1:5000/api/start'
+GUESS_URL = 'http://127.0.0.1:5000/api/guess'
+
 
 #========================================================
 #    Logging
@@ -74,6 +79,8 @@ class RegexSolver:
     def __init__(self, username: str):
         self.username = username
         self.rounds: int = None
+        self.user_id = USER_ID
+        self.api_key = API_KEY
 
         # API 
         self.token: Optional[str] = None
@@ -260,10 +267,9 @@ class RegexSolver:
             self.current_results = payload.results
 
 
-    def start(self, url=None) -> GameData:
-        if url is None:
-            url = f'http://127.0.0.1:5000/api/start/{self.username}/regex'
-        r = requests.get(url)
+    def start(self, url=START_URL) -> GameData:
+        payload = {'solver_api_key': self.api_key, 'user_id': self.user_id}
+        r = requests.post(url=url, json=payload)
         try:
             x = r.json()
             start_payload = GameData(**x)

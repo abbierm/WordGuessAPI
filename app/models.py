@@ -135,8 +135,13 @@ class Solver(db.Model):
     def make_api_key(self) -> str:
         self.api_key = secrets.token_hex(16)
         db.session.add(self)
-        db.commit()
+        db.session.commit()
         return self.api_key
+    
+    @staticmethod
+    def check_key(key):
+        solver = db.session.scalar(sa.select(Solver).where(Solver.api_key == key))
+        return solver
     
     @staticmethod
     def get_solver(api_key: str):

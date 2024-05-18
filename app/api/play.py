@@ -28,7 +28,7 @@ def start_game():
 
     # Validate that the POST body contains the correct information
     try:
-        payload = Start.model_validation(data)
+        payload = Start.model_validate(data)
     except ValidationError:
         return bad_request("Invalid POST request. /start route must include a valid user id and the solver's unique api key Both of which can be obtained via the website.")
 
