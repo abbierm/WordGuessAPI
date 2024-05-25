@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Word-Guess - {{ solver.name }} Page
+{% endblock title %}
+
+{% block main %}
+
+<div class="page-container">
+    <div class="solver-header">
+        <div class="solver-header-title">
+            <h1 class="solver-title-text">{{ solver.name }}'s<br>Page</h1>     
+        </div>
+        <div class="solver-table-container">
+            <div class="solver-Rrow">
+                <div class=".solver-Rrow-cell solver-Rtable-heading">Stats</div>
+            </div>
+            <div class="solver-Rrow">
+                <div class="solver-Rrow-cell Rrow-header">Solver ID</div>
+                <div class="solver-Rrow-cell">{{ solver.id }}</div>
+                <hr class="solver-Rrow-divider">
+                <div class="solver-Rrow-cell Rrow-header">Words Played</div>
+                <div class="solver-Rrow-cell">{{ solver.words_played }}</div>
+            </div>
+            <div class="solver-Rrow">
+                <div class="solver-Rrow-cell Rrow-header">Words Won</div>
+                <div class="solver-Rrow-cell">{{ solver.words_won }}</div>
+                <hr class="solver-Rrow-divider">
+                <div class="solver-Rrow-cell Rrow-header">Average Won</div>
+                <div class="solver-Rrow-cell">{{ solver.avg }}</div>
+            </div>
+            <div class="solver-Rrow">
+                <div class="solver-Rrow-cell Rrow-header">Average Guesses</div>
+                <div class="solver-Rrow-cell">{{ solver.avg_guesses }}</div>
+                <hr class="solver-Rrow-divider">
+                <div class="solver-Rrow-cell Rrow-header">Highest Streak</div>
+                <div class="solver-Rrow-cell">#TODO</div>
+            </div>
+        </div>
+            
+        
+    </div>
+    
+    <div class="row-item">
+        <h3>API Key</h3>
+    </div>
+    {% if solver.api_key != None %}
+    <div class="row-item">
+        <h3>{{ solver.api_key }}</h3>
+    </div>
+    <div class="row-item">
+        <form action="{{url_for('main.create_new_key') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset your API key for {{ solver.name }}');">
+            <input type="hidden" value="{{ solver.id }}" name="solver">
+            <input type="submit" class="reset-button" value="Create New API KEY">
+        </form>
+    </div>
+    {% else %}
+    <div class ="row-item">
+        <h3>No API key yet.  Click here to create a key -></h3>
+    </div>
+    <div class="row-item">
+        <form action="{{url_for('main.create_new_key') }}" method="POST">
+            <input type="hidden" value="{{ solver.id }}" name="solver">
+            <input type="submit" class="reset-button" value="Create New API KEY">
+        </form>
+    </div>
+    {% endif %}
+    
+
+</div>
+
+{% endblock main %}
+
+
+
+<!--
+My API key box thing
+<div class="solver-title-box">
+    <div class="row-item">
+        <h3>API Key</h3>
+    </div>
+    {% if solver.api_key != None %}
+    <div class="row-item">
+        <h3>{{ solver.api_key }}</h3>
+    </div>
+    <div class="row-item">
+        <form action="{{url_for('main.create_new_key') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset your API key for {{ solver.name }}');">
+            <input type="hidden" value="{{ solver.id }}" name="solver">
+            <input type="submit" class="reset-button" value="Create New API KEY">
+        </form>
+    </div>
+    {% else %}
+    <div class ="row-item">
+        <h3>No API key yet.  Click here to create a key -></h3>
+    </div>
+    <div class="row-item">
+        <form action="{{url_for('main.create_new_key') }}" method="POST">
+            <input type="hidden" value="{{ solver.id }}" name="solver">
+            <input type="submit" class="reset-button" value="Create New API KEY">
+        </form>
+    </div>
+    {% endif %}
+
+
+
+
+
+
+
+
+
+
+
+
+-->

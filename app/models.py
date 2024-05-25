@@ -3,6 +3,7 @@ from datetime import datetime, timezone, timedelta
 from time import time
 import secrets
 import sqlalchemy as sa
+from sqlalchemy import func, and_
 import sqlalchemy.orm as so
 from typing import Optional
 from flask_login import UserMixin
@@ -113,6 +114,8 @@ class Solver(db.Model):
     words_played: so.Mapped[int] = so.mapped_column(default=0)
     words_won: so.Mapped[int] = so.mapped_column(default=0)
     avg: so.Mapped[float] = so.mapped_column(default=0)
+    avg_guesses: so.Mapped[float] = so.mapped_column(
+                                        default=None, nullable=True)
     games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver',
                             cascade='all, delete-orphan', passive_deletes=True)
     api_key: so.Mapped[Optional[str]] = so.mapped_column(
@@ -152,14 +155,33 @@ class Solver(db.Model):
     #===========================================================================
     # Gameplay stat Functions 
     #===========================================================================
+   
+
+    def calculate_avg_guesses(self) -> float:
+        """Calculates the avg number of guesses only in winning games."""
+        results = db.session.execute(
+            sa.select(Game.id, Game.guess_count)
+            .where(and_(Game.solver_id == self.id, Game.results == True))
+        )
+        count = 0
+        guess_count = 0
+        for row in results:
+            count += 1
+            guess_count += row[1]
+
+        return round((guess_count / count), 2)
+    
+    
     def update_stats(self, won: bool):
-        """Updates stats after a game.  Not used for a clean refresh."""
+        """Updates stats after a game. Not used for a clean refresh."""
         self.words_played += 1
         if won == True:
             self.words_won += 1
         self.avg = round(((self.words_won / self.words_played) * 100), 2)
+        self.avg_guesses = self.calculate_avg_guesses()
         db.session.add(self)
         db.session.commit()
+
 
     @staticmethod
     def validate_user_solver(username, solver_name) -> bool:
@@ -179,7 +201,6 @@ class Solver(db.Model):
         self.words_won = 0
         db.session.add(self)
         db.session.commit()
-
 
 
 class Game(db.Model):

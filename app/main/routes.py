@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, request, flash
 from app.main import bp
-from flask_login import current_user
+from flask_login import current_user, login_required
 import sqlalchemy as sa
 from app import db
 from app.models import User, Solver, Game
@@ -18,6 +18,7 @@ def documentation():
     return render_template("/documentation.html")
 
 
+@login_required
 @bp.route('/user/<username>', methods=["GET", 'POST'])
 def user(username):
     user = db.session.scalar(sa.select(User).where(User.username == username))
@@ -27,7 +28,7 @@ def user(username):
     solvers = db.session.scalars(sa.select(Solver).where(Solver.user_id==user.id))
     return render_template('/user.html', user=user, solvers=list(solvers))
 
-
+@login_required
 @bp.route('/reset_solver', methods=["POST"])
 def reset_solver():
     if request.method == "POST" and current_user.is_authenticated:
@@ -40,7 +41,7 @@ def reset_solver():
     else:
         return redirect(url_for('main.index'))
 
-
+@login_required
 @bp.route('/delete_solver', methods=["POST"])
 def delete_solver():
     if request.method == "POST" and current_user.is_authenticated:
@@ -55,3 +56,22 @@ def delete_solver():
     else:
         return redirect(url_for('main.index'))
         
+
+@login_required
+@bp.route('/solver/<solver_name>', methods=["GET"])
+def solver(solver_name):
+    if current_user.is_authenticated:
+        solver = db.session.scalar(sa.select(Solver).where(Solver.name == solver_name))
+        games = db.session.scalars(sa.select(Game).where(Game.solver_id == solver.id))
+        return render_template('/solver.html', solver=solver, games=list(games))
+    return redirect(url_for('main.index'))
+
+
+@login_required
+@bp.route('/create_api_key', methods=["POST"])
+def create_new_key():
+    if request.method == "POST" and current_user.is_authenticated:
+        solver_id = request.form.get("solver")
+        solver = db.session.scalar(sa.select(Solver).where(Solver.id == solver_id))
+        new_api_key = solver.make_api_key()
+        return redirect(url_for('main.solver', solver_name=solver.name))

@@ -153,4 +153,69 @@ input[type=submit] {
     background-color: #22916e;
 }
 
-/* Auth Forms */
+
+/* Solver Page */
+.solver-header {
+    margin: 1rem;
+    padding: 1rem 1rem 1rem 0rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: start;
+    width: 100%;
+}
+
+.solver-header-title {
+    align-self: center;
+}
+
+.solver-Rtable-heading {
+    color: #17614a;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+}
+.solver-title-text {
+    text-align: center;
+    margin: .5rem;
+    padding: .5rem;
+    color: #17614a;
+    font-size: 40px;
+}
+
+.solver-table-container {
+    width: 50%;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    border: 1px solid black;
+    /* margin: 0 auto; */
+}
+
+.solver-Rrow {
+    display: flex;
+    flex-flow: row nowrap;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid black;
+    height: 40px;
+}
+
+.solver-Rrow-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    height: 40px;
+    text-align: center;
+    font-size: 12px; 
+    padding: 8px, 0;
+}
+
+.Rrow-header {
+    background-color: #ececec;
+}
+
+.solver-Rrow-divider{
+    height: 40px;
+}

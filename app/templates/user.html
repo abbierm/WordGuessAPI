@@ -26,7 +26,9 @@
         </div>
         {% for solver in solvers %}
         <div class="table-row">
-            <div class="row-item">{{ solver.name }}</div>
+            <div class="row-item">
+                <a href="{{ url_for('main.solver', solver_name=solver.name) }}">{{ solver.name }}</a>
+            </div>
             <div class="row-item">{{ solver.id }}</div>
             <div class="row-item">{{ solver.words_played }}</div>
             <div class="row-item">{{ solver.words_won }}</div>

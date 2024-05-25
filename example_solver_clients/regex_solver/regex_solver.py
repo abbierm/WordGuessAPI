@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Optional
 from words.correct import correct_words
 
-API_KEY = 'd012ba84c1bb688b252ad6ec749084a1'
+API_KEY = '7467f1e851bc7a0367444a04ea9b0651'
 USER_ID = 1
 START_URL = 'http://127.0.0.1:5000/api/start'
 GUESS_URL = 'http://127.0.0.1:5000/api/guess'
