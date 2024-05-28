@@ -156,8 +156,6 @@ input[type=submit] {
 
 /* Solver Page */
 .solver-header {
-    margin: 1rem;
-    padding: 1rem 1rem 1rem 0rem;
     display: flex;
     justify-content: space-around;
     align-items: start;
@@ -165,7 +163,18 @@ input[type=submit] {
 }
 
 .solver-header-title {
-    align-self: center;
+    align-self: start;
+    padding-right: 7%;
+}
+
+.solver-table-container {
+    width: 60%;
+    margin-right: 10%;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    border: 1px solid black;
+    /* margin: 0 auto; */
 }
 
 .solver-Rtable-heading {
@@ -174,21 +183,13 @@ input[type=submit] {
     font-size: 16px;
     font-weight: 700;
 }
+
 .solver-title-text {
     text-align: center;
     margin: .5rem;
     padding: .5rem;
     color: #17614a;
     font-size: 40px;
-}
-
-.solver-table-container {
-    width: 50%;
-    display: flex;
-    flex-flow: column nowrap;
-    align-items: center;
-    border: 1px solid black;
-    /* margin: 0 auto; */
 }
 
 .solver-Rrow {
@@ -201,6 +202,10 @@ input[type=submit] {
     height: 40px;
 }
 
+.Rrow-header {
+    background-color: #ececec;
+}
+
 .solver-Rrow-cell {
     display: flex;
     justify-content: center;
@@ -210,10 +215,7 @@ input[type=submit] {
     text-align: center;
     font-size: 12px; 
     padding: 8px, 0;
-}
-
-.Rrow-header {
-    background-color: #ececec;
+    
 }
 
 .solver-Rrow-divider{

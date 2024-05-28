@@ -62,7 +62,11 @@ def delete_solver():
 def solver(solver_name):
     if current_user.is_authenticated:
         solver = db.session.scalar(sa.select(Solver).where(Solver.name == solver_name))
-        games = db.session.scalars(sa.select(Game).where(Game.solver_id == solver.id))
+        # games = db.session.scalars(sa.select(Game).where(Game.solver_id == solver.id))
+
+        game_query = sa.select(Game).where(
+            Game.solver_id == solver.id).order_by(Game.id.desc())
+        games = db.paginate(game_query, page=1, per_page=20, error_out=False).items
         return render_template('/solver.html', solver=solver, games=list(games))
     return redirect(url_for('main.index'))
 
@@ -75,3 +79,4 @@ def create_new_key():
         solver = db.session.scalar(sa.select(Solver).where(Solver.id == solver_id))
         new_api_key = solver.make_api_key()
         return redirect(url_for('main.solver', solver_name=solver.name))
+    

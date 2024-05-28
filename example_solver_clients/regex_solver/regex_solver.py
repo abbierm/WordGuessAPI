@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Optional
 from words.correct import correct_words
 
-API_KEY = '7467f1e851bc7a0367444a04ea9b0651'
+API_KEY = '79d562d0e5a90a6bbe20ddec0dd11a2a'
 USER_ID = 1
 START_URL = 'http://127.0.0.1:5000/api/start'
 GUESS_URL = 'http://127.0.0.1:5000/api/guess'
@@ -343,7 +343,7 @@ class RegexSolver:
 #==========================================================================
 def main():
     solver_instance = RegexSolver(username='v8-dev')
-    solver_instance.play(200)
+    solver_instance.play(1000)
 
 if __name__ == "__main__":
     main()

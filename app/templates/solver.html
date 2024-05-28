@@ -36,80 +36,35 @@
                 <div class="solver-Rrow-cell Rrow-header">Highest Streak</div>
                 <div class="solver-Rrow-cell">#TODO</div>
             </div>
+            <div class="solver-Rrow">
+                <div class="solver-Rrow-cell Rrow-header">API Key</div>
+                {% if solver.api_key != None %}
+                <div class="solver-Rrow-cell">{{ solver.api_key }}</div>
+                {% else %}
+                <div class="solver-Rrow-cell">None</div>
+                {% endif %}
+            </div>
+            <div class="solver-Rrow">
+                <div class="solver-Rrow-cell ">
+                    <form action="{{url_for('main.create_new_key') }}" method="POST">
+                        <input type="hidden" value="{{ solver.id }}" name="solver">
+                        <input type="submit" class="reset-button" value="Create New API KEY">
+                    </form>
+                </div>
+            </div>
         </div>
             
         
     </div>
+    <div class="table-title">
+        <h3>Games Table</h3>
+    </div>
+    <div class="games-table-container">
+
+    </div>
     
-    <div class="row-item">
-        <h3>API Key</h3>
-    </div>
-    {% if solver.api_key != None %}
-    <div class="row-item">
-        <h3>{{ solver.api_key }}</h3>
-    </div>
-    <div class="row-item">
-        <form action="{{url_for('main.create_new_key') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset your API key for {{ solver.name }}');">
-            <input type="hidden" value="{{ solver.id }}" name="solver">
-            <input type="submit" class="reset-button" value="Create New API KEY">
-        </form>
-    </div>
-    {% else %}
-    <div class ="row-item">
-        <h3>No API key yet.  Click here to create a key -></h3>
-    </div>
-    <div class="row-item">
-        <form action="{{url_for('main.create_new_key') }}" method="POST">
-            <input type="hidden" value="{{ solver.id }}" name="solver">
-            <input type="submit" class="reset-button" value="Create New API KEY">
-        </form>
-    </div>
-    {% endif %}
-    
+
 
 </div>
 
 {% endblock main %}
-
-
-
-<!--
-My API key box thing
-<div class="solver-title-box">
-    <div class="row-item">
-        <h3>API Key</h3>
-    </div>
-    {% if solver.api_key != None %}
-    <div class="row-item">
-        <h3>{{ solver.api_key }}</h3>
-    </div>
-    <div class="row-item">
-        <form action="{{url_for('main.create_new_key') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset your API key for {{ solver.name }}');">
-            <input type="hidden" value="{{ solver.id }}" name="solver">
-            <input type="submit" class="reset-button" value="Create New API KEY">
-        </form>
-    </div>
-    {% else %}
-    <div class ="row-item">
-        <h3>No API key yet.  Click here to create a key -></h3>
-    </div>
-    <div class="row-item">
-        <form action="{{url_for('main.create_new_key') }}" method="POST">
-            <input type="hidden" value="{{ solver.id }}" name="solver">
-            <input type="submit" class="reset-button" value="Create New API KEY">
-        </form>
-    </div>
-    {% endif %}
-
-
-
-
-
-
-
-
-
-
-
-
--->
