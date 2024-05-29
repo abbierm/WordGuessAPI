@@ -178,7 +178,8 @@ class Solver(db.Model):
         if won == True:
             self.words_won += 1
         self.avg = round(((self.words_won / self.words_played) * 100), 2)
-        self.avg_guesses = self.calculate_avg_guesses()
+        if won == True:
+            self.avg_guesses = self.calculate_avg_guesses()
         db.session.add(self)
         db.session.commit()
 

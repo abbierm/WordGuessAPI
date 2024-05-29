@@ -15,6 +15,7 @@ from typing import Optional
 
 
 URL = 'http://127.0.0.1:5000/'
+API_KEY = '735643004e2a0adba5197176f22ef937'
 
 
 # =========================================================================
@@ -40,6 +41,7 @@ logger.setLevel(logging.DEBUG)
 class SliceBurn:
     def __init__(self):
         self.username = 'v8-dev'
+        self.user_id = 1
         self.solvername = 'sliceAndBurn'
         self.rounds: int = None
         self.current_round = 0
@@ -98,12 +100,14 @@ class SliceBurn:
         
 
     def _start_game(self):
-        url = URL + f'/api/start/{self.username}/{self.solvername}'
-        r = get(url)
+        url = URL + '/api/start'
+        payload = {'solver_api_key': API_KEY, 'user_id': self.user_id}
+        r = post(url=url, json=payload)
         try:
             self._parse_start_payload(r.json())
         except JSONDecodeError as e:
             logger.warning("Starting game request error: %s", e)
+            print(r.text)
             sys.exit()
 
 
@@ -271,7 +275,7 @@ class SliceBurn:
 # =========================================================================
 def main():
     new_slice_instance = SliceBurn()
-    new_slice_instance.play(100)
+    new_slice_instance.play(500)
 
 if __name__ == '__main__':
     main()
