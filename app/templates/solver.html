@@ -56,15 +56,91 @@
             
         
     </div>
-    <div class="table-title">
-        <h3>Games Table</h3>
+    <div class="games-table-title">
+        <h2>Games Table</h2>
     </div>
     <div class="games-table-container">
-
+        <table>
+            <tr>
+                <th>GameID</th>
+                <th>Date-Time</th>
+                <th>Total Guesses</th>
+                <th>Results</th>
+                <th>Correct Word</th>
+                <th>Guesses</th>
+            </tr>
+            {% for game in games %}
+            <tr>
+                <td>{{ game.id }}</td>
+                <td>#TODO</td>
+                <td>{{ game.guess_count }}</td>
+                {% if game.results == True %}
+                <td>Won</td>
+                {% else %}
+                <td>Lost</td>
+                {% endif %}
+                <td>{{ game.correct_word }}</td>
+                <td>{{ game.guesses }}</td>
+            </tr>
+            {% endfor %}
+        </table>
     </div>
+    <!-- <div class="table-container">
+        {% for game in games %}
+        <div class="table-row heading">
+            <div class="row-item">Game ID</div>
+            <div class="row-item">correct word</div>
+            <div class="row-item">Total Guesses</div>
+            <div class="row-item">Results</div>
+        </div>
+        <div class="table-row">
+            <div class="row-item">{{ game.id }}</div>
+            <div class="row-item">{{ game.correct_word }}</div>
+            <div class="row-item">{{ game.guess_count }}</div>
+            {% if game.results == True %}
+            <div class="row-item">Won</div>
+            {% else %}
+            <div class="row-item">Lost</div>
+            {% endif %}
+        </div>
+        <div class="table-row heading">
+            <div class="row-item">Guess 1</div>
+            <div class="row-item">Guess 2</div>
+            <div class="row-item">Guess 3</div>
+            <div class="row-item">Guess 4</div>
+            <div class="row-item">Guess 5</div>
+            <div class="row-item">Guess 6</div>
+        </div>
+        {% set guess_list = game.guesses.split(', ') %}
+        <div class="table-row">
+            {% for guess in guess_list %}
+            <div class="row-item">{{ guess }}</div>
+            {% endfor %}
+            {% if game.guess_count < 6 %}
+                {% set guess_count = game.guess_count %}
+                {% for x in range(guess_count, 7) %}
+            <div class="row-item">None</div>
+                {% endfor %}
+            {% endif %}
+            
+        </div> -->
+       
+        <!-- {% set feedback_list = game.feedback.split(', ') %}
+        <div class="table-row">
+            {% for feedback in feedback_list %}
+            <div class="row-item">{{ feedback }}</div>
+            {% endfor %}
+            {% if game.guess_count < 6 %}
+                {% set guess_count = game.guess_count %}
+                {% for x in range(guess_count, 7) %}
+            <div class="row-item">None</div>
+                {% endfor %}
+            {% endif %}
+            
+        </div> -->
+    <!-- {% endfor %} -->
+    <!-- </div> -->
     
-
-
 </div>
 
 {% endblock main %}

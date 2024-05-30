@@ -221,3 +221,55 @@ input[type=submit] {
 .solver-Rrow-divider{
     height: 40px;
 }
+
+
+/* Solver Games Tables Via Gridbox */
+
+.games-table-title {
+    text-align: center;
+    margin: 30px;
+    font-weight: bold;
+    color: #17614a;
+    font-family: "Oxygen";
+    font-style: normal;
+}
+
+.games-table-container {
+    text-align: center;
+    margin: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+table {
+    border-collapse: collapse;
+    border: 1px solid black;
+    max-width: 100%;
+}
+
+th {
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+    min-width: fit-content;
+    background-color: #ececec;
+    padding: 10px;
+}
+
+td {
+    border-bottom: 1px solid;
+    min-width: fit-content;
+    padding: 5px;
+    border-right: 1px solid;
+    
+}
+
+.guess {
+    background-color: #cecccc;
+    border-bottom: 2px solid;
+    border-right: 1px solid;
+    min-width: 60px;
+    padding: 5px;
+}
+
+
