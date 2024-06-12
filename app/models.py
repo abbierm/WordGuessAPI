@@ -203,6 +203,16 @@ class Solver(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def get_games(self):
+       return (
+           sa.select(Game)
+           .where(
+               Game.solver_id == self.id)
+            .order_by(
+                Game.id.desc())
+           )
+       
+
 
 class Game(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)

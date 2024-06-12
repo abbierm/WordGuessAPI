@@ -3,7 +3,7 @@ from app.main import bp
 from flask_login import current_user, login_required
 import sqlalchemy as sa
 from app import db
-from app.models import User, Solver, Game
+from app.models import User, Solver
 
 
 @bp.route('/', methods=["GET"])
@@ -61,14 +61,22 @@ def delete_solver():
 @bp.route('/solver/<solver_name>', methods=["GET"])
 def solver(solver_name):
     if current_user.is_authenticated:
-        solver = db.session.scalar(sa.select(Solver).where(Solver.name == solver_name))
-        # games = db.session.scalars(sa.select(Game).where(Game.solver_id == solver.id))
+        page = request.args.get('games', 1, type=int)
+        solver = db.session.scalar(sa.select(Solver)
+                            .where(Solver.name == solver_name))
+        games = db.paginate(solver.get_games(), page=page, 
+                                    per_page=50, error_out=False)
+        next_url = url_for('main.solver', solver_name=solver.name, 
+                                games=games.next_num) \
+                if games.has_next else None
+        prev_url = url_for('main.solver', solver_name=solver.name, 
+                                games=games.prev_num) \
+                if games.has_prev else None
+        return render_template('/solver.html', solver=solver, 
+                            games=games, next_url=next_url, prev_url=prev_url)
+    else:
+        return redirect(url_for('main.index'))
 
-        game_query = sa.select(Game).where(
-            Game.solver_id == solver.id).order_by(Game.id.desc())
-        games = db.paginate(game_query, page=1, per_page=50, error_out=False).items
-        return render_template('/solver.html', solver=solver, games=list(games))
-    return redirect(url_for('main.index'))
 
 
 @login_required
@@ -77,7 +85,7 @@ def create_new_key():
     if request.method == "POST" and current_user.is_authenticated:
         solver_id = request.form.get("solver")
         solver = db.session.scalar(sa.select(Solver).where(Solver.id == solver_id))
-        new_api_key = solver.make_api_key()
+        solver.make_api_key()
         return redirect(url_for('main.solver', solver_name=solver.name))
     
 
