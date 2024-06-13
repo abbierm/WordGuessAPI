@@ -3,7 +3,7 @@ from app.main import bp
 from flask_login import current_user, login_required
 import sqlalchemy as sa
 from app import db
-from app.models import User, Solver
+from app.models import User, Solver, Game
 
 
 @bp.route('/', methods=["GET"])
@@ -50,13 +50,13 @@ def delete_solver():
                                             Solver.id == solver_id))
         name = solver.name
         db.session.execute(sa.delete(Solver).where(Solver.id == solver_id))
+        db.session.execute(sa.delete(Game).where(Game.solver_id == solver_id))
         db.session.commit()
         flash(f"{name} has been deleted!!")
         return redirect(url_for('main.user', username=current_user.username))
     else:
         return redirect(url_for('main.index'))
         
-
 @login_required
 @bp.route('/solver/<solver_name>', methods=["GET"])
 def solver(solver_name):
@@ -72,8 +72,8 @@ def solver(solver_name):
         prev_url = url_for('main.solver', solver_name=solver.name, 
                                 games=games.prev_num) \
                 if games.has_prev else None
-        return render_template('/solver.html', solver=solver, 
-                            games=games, next_url=next_url, prev_url=prev_url)
+        return render_template('/solver.html', solver=solver, prev_url=prev_url, next_url=next_url, 
+                            games=games)
     else:
         return redirect(url_for('main.index'))
 

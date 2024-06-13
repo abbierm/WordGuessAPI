@@ -59,34 +59,35 @@
     <div class="games-table-title">
         <h2>Games Table</h2>
     </div>
-    <div class="games-table-container">
-        <table>
-            <tr>
-                <th>GameID</th>
-                <th>Date-Time</th>
-                <th>Total Guesses</th>
-                <th>Results</th>
-                <th>Correct Word</th>
-                <th>Guesses</th>
-            </tr>
-            {% for game in games %}
-            <tr>
-                <td>{{ game.id }}</td>
-                <td>#TODO</td>
-                <td>{{ game.guess_count }}</td>
-                {% if game.results == True %}
-                <td>Won</td>
-                {% else %}
-                <td>Lost</td>
-                {% endif %}
-                <td>{{ game.correct_word }}</td>
-                <td>{{ game.guesses }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    
-        <div class="navigation-links-games"></div>
+
+    <div>
+        <div class="games-table-container">
+            <table>
+                <tr>
+                    <th>GameID</th>
+                    <th>Date-Time</th>
+                    <th>Total Guesses</th>
+                    <th>Results</th>
+                    <th>Correct Word</th>
+                    <th>Guesses</th>
+                </tr>
+                {% for game in games %}
+                <tr>
+                    <td>{{ game.id }}</td>
+                    <td>#TODO</td>
+                    <td>{{ game.guess_count }}</td>
+                    {% if game.results == True %}
+                    <td>Won</td>
+                    {% else %}
+                    <td>Lost</td>
+                    {% endif %}
+                    <td>{{ game.correct_word }}</td>
+                    <td>{{ game.guesses }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="navigation-links-games">
             <div class="previous-games-link-box">
                 {% if prev_url %}
                 <a href="{{ prev_url }}">Prev</a>
@@ -98,6 +99,10 @@
                 {% endif %}
             </div>
         </div>
+    </div>
+   
+    
+    
     
 </div>
 
