@@ -1,6 +1,6 @@
 # wordle clone for python programs
 # plays wordle with python wordle solvers
-# Clone of wordguess, adding a database
+
 
 from app import db
 from collections import Counter
