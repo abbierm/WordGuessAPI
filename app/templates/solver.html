@@ -46,7 +46,7 @@
             </div>
             <div class="solver-Rrow">
                 <div class="solver-Rrow-cell ">
-                    <form action="{{url_for('main.create_new_key') }}" method="POST">
+                    <form action="{{ url_for('main.create_new_key') }}" method="POST">
                         <input type="hidden" value="{{ solver.id }}" name="solver">
                         <input type="submit" class="reset-button" value="Create New API KEY">
                     </form>
@@ -56,13 +56,26 @@
             
         
     </div>
-    <div class="games-table-title">
-        <h2>Games Table</h2>
-    </div>
+    
 
     <div>
+        <div class="games-table-title-bar">
+            <div class="games-table-title">
+                <h2>Games Table</h2>
+            </div>
+            <div class="games-search-select">
+                <p>Filter Games</p>
+                <form  action="{{ url_for('main.solver', solver_name=solver.name) }}" method="GET">
+                    <select name="filter" id="filterList">
+                        <option value="lost">Lost Games</option>
+                        <option value="won">Won Games</option>
+                    </select>
+                    <input type="submit" class="reset-button" value="filter">
+                </form>
+            </div>
+        </div>
         <div class="games-table-container">
-            <table>
+            <table id="games">
                 <tr>
                     <th>GameID</th>
                     <th>Date-Time</th>
@@ -76,11 +89,13 @@
                     <td>{{ game.id }}</td>
                     <td>#TODO</td>
                     <td>{{ game.guess_count }}</td>
-                    {% if game.results == True %}
-                    <td>Won</td>
-                    {% else %}
-                    <td>Lost</td>
-                    {% endif %}
+                    <td id="results">
+                        {% if game.results == True %}
+                            Won
+                        {% else %}
+                            Lost
+                        {% endif %} 
+                    </td>
                     <td>{{ game.correct_word }}</td>
                     <td>{{ game.guesses }}</td>
                 </tr>
@@ -100,10 +115,6 @@
             </div>
         </div>
     </div>
-   
-    
-    
-    
 </div>
 
 {% endblock main %}

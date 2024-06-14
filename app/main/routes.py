@@ -58,25 +58,28 @@ def delete_solver():
         return redirect(url_for('main.index'))
         
 @login_required
-@bp.route('/solver/<solver_name>', methods=["GET"])
-def solver(solver_name):
+@bp.route('/solver/<solver_name>/', methods=["GET"])
+def solver(solver_name, filter=None):
     if current_user.is_authenticated:
         page = request.args.get('games', 1, type=int)
+        filter = request.args.get('filter')
         solver = db.session.scalar(sa.select(Solver)
                             .where(Solver.name == solver_name))
-        games = db.paginate(solver.get_games(), page=page, 
+        
+        games = db.paginate(solver.get_games(filter=filter), page=page, 
                                     per_page=50, error_out=False)
+        
         next_url = url_for('main.solver', solver_name=solver.name, 
-                                games=games.next_num) \
+                           filter=filter, games=games.next_num) \
                 if games.has_next else None
         prev_url = url_for('main.solver', solver_name=solver.name, 
-                                games=games.prev_num) \
+                           filter=filter, games=games.prev_num) \
                 if games.has_prev else None
+        
         return render_template('/solver.html', solver=solver, prev_url=prev_url, next_url=next_url, 
                             games=games)
     else:
         return redirect(url_for('main.index'))
-
 
 
 @login_required
@@ -89,6 +92,3 @@ def create_new_key():
         return redirect(url_for('main.solver', solver_name=solver.name))
     
 
-
-    
-    

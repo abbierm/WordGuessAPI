@@ -228,15 +228,26 @@ input[type=submit] {
     text-align: center;
 }
 
-.games-table-title {
+.games-table-title-bar {
+    display: flex;
+    justify-content: space-around;
     text-align: center;
     margin: 30px;
+    align-items: center;
+}
+
+.games-table-title {
     font-weight: bold;
     color: #17614a;
     font-family: "Oxygen";
     font-style: normal;
 }
 
+.games-search-select {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
 .games-table-container {
     text-align: center;
     margin: 20px;

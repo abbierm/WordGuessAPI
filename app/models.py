@@ -203,14 +203,16 @@ class Solver(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def get_games(self):
-       return (
-           sa.select(Game)
-           .where(
-               Game.solver_id == self.id)
-            .order_by(
-                Game.id.desc())
-           )
+    def get_games(self, filter=None):
+       
+       if filter is None or filter != "lost" and filter != "won":
+           
+           return sa.select(Game).where(Game.solver_id == self.id)
+       elif filter == "lost":
+           
+           return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == False))
+       elif filter == "won":
+           return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == True))
        
 
 
@@ -253,7 +255,6 @@ class Game(db.Model):
             return False
         if user_game.token_expiration.replace(
                             tzinfo=timezone.utc) < datetime.now(timezone.utc):
-            print('expired game token')
             return False
         return True
     
