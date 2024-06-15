@@ -1,5 +1,5 @@
 # slice_burn.py is an example WordGuess solver that
-# uses a culling and letters-remained stretegy to 
+# uses a culling and letters-remained strategy to 
 # pick the next word
 
 from collections import Counter
@@ -15,7 +15,7 @@ from typing import Optional
 
 
 URL = 'http://127.0.0.1:5000/'
-API_KEY = '735643004e2a0adba5197176f22ef937'
+API_KEY = 'secret key'
 
 
 # =========================================================================

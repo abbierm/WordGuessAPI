@@ -22,7 +22,6 @@ class User(UserMixin, db.Model):
     confirmed: so.Mapped[bool] = so.mapped_column(sa.Boolean(), default=False)
     solvers: so.WriteOnlyMapped['Solver'] = so.relationship(
                                         back_populates='user', cascade='all, delete-orphan', passive_deletes=True)
-    
    
     #===========================================================================
     # API user lookup
@@ -98,7 +97,6 @@ class User(UserMixin, db.Model):
         return False
 
 
-
 @login.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
@@ -116,6 +114,8 @@ class Solver(db.Model):
     avg: so.Mapped[float] = so.mapped_column(default=0)
     avg_guesses: so.Mapped[float] = so.mapped_column(
                                         default=None, nullable=True)
+    current_streak: so.Mapped[int] = so.mapped_column(default=0)
+    max_streak: so.Mapped[int] = so.mapped_column(default=0)
     games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver',
                             cascade='all, delete-orphan', passive_deletes=True)
     api_key: so.Mapped[Optional[str]] = so.mapped_column(
@@ -150,40 +150,7 @@ class Solver(db.Model):
     def get_solver(api_key: str):
         """Returns solver instance or None"""
         return db.session.scalar(sa.select(Solver).where(Solver.api_key == api_key))
-        
-
-    #===========================================================================
-    # Gameplay stat Functions 
-    #===========================================================================
-   
-
-    def calculate_avg_guesses(self) -> float:
-        """Calculates the avg number of guesses only in winning games."""
-        results = db.session.execute(
-            sa.select(Game.id, Game.guess_count)
-            .where(and_(Game.solver_id == self.id, Game.results == True))
-        )
-        count = 0
-        guess_count = 0
-        for row in results:
-            count += 1
-            guess_count += row[1]
-
-        return round((guess_count / count), 2)
     
-    
-    def update_stats(self, won: bool):
-        """Updates stats after a game. Not used for a clean refresh."""
-        self.words_played += 1
-        if won == True:
-            self.words_won += 1
-        self.avg = round(((self.words_won / self.words_played) * 100), 2)
-        if won == True:
-            self.avg_guesses = self.calculate_avg_guesses()
-        db.session.add(self)
-        db.session.commit()
-
-
     @staticmethod
     def validate_user_solver(username, solver_name) -> bool:
         user = db.session.scalar(sa.select(User).where(
@@ -193,7 +160,42 @@ class Solver(db.Model):
         if user.id != solver.user_id:
             return False
         return True
+        
+
+    #===========================================================================
+    # Solver Gameplay Stat Functions 
+    #===========================================================================
+   
+
+    def calculate_avg_guesses(self) -> float:
+        """Calculates the avg number of guesses only in winning games."""
+        results = db.session.execute(
+                            sa.select(Game.id, Game.guess_count)
+                            .where(and_(Game.solver_id == self.id, 
+                            Game.results == True)))
+        count = 0
+        guess_count = 0
+        for row in results:
+            count += 1
+            guess_count += row[1]
+        return round((guess_count / count), 2)
     
+    def update_stats(self, won: bool):
+        """Updates stats after a game. Not used for a clean refresh."""
+        self.words_played += 1
+        if won == True:
+            self.words_won += 1
+            self.current_streak += 1
+            if self.current_streak > self.max_streak:
+                self.max_streak = self.current_streak
+        else:
+            self.current_streak = 0
+        self.avg = round(((self.words_won / self.words_played) * 100), 2)
+        if won == True:
+            self.avg_guesses = self.calculate_avg_guesses()
+        db.session.add(self)
+        db.session.commit()
+
     def reset_games(self):
         """Deletes all of the games for this solver and updates their stats"""
         db.session.execute(sa.delete(Game).where(Game.solver_id == self.id))
@@ -204,16 +206,12 @@ class Solver(db.Model):
         db.session.commit()
 
     def get_games(self, filter=None):
-       
        if filter is None or filter != "lost" and filter != "won":
-           
            return sa.select(Game).where(Game.solver_id == self.id)
        elif filter == "lost":
-           
            return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == False))
        elif filter == "won":
            return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == True))
-       
 
 
 class Game(db.Model):
@@ -223,6 +221,8 @@ class Game(db.Model):
     token: so.Mapped[Optional[str]] = so.mapped_column(
                                         sa.String(32),index=True, unique=True)
     token_expiration: so.Mapped[Optional[datetime]]
+    timestamp: so.Mapped[datetime] = so.mapped_column(index=True, 
+                                    default=lambda: datetime.now(timezone.utc))
     solver: so.Mapped[Solver] = so.relationship(back_populates='games')
     correct_word: so.Mapped[str] = so.mapped_column(sa.String(10))
     guess_count: so.Mapped[int] = so.mapped_column(default=0)
@@ -233,12 +233,12 @@ class Game(db.Model):
     # True is won, False is Lost
     results: so.Mapped[Optional[bool]] = so.mapped_column(default=None)
 
+
     def get_token(self, expires_in=36000):
         """
         Referenced Miguel Grinberg's Flask Mega-Tutorial 
         to help create this get_token and check_token functions. 
         """
-
         now = datetime.now(timezone.utc)
         if self.token and self.token_expiration.replace(
                 tzinfo=timezone.utc) > now + timedelta(seconds=60):
