@@ -1,6 +1,8 @@
-from app import wordguess
+"""
+Testing gameplay loop from app/wordguess.py without the active app
+"""
 
-# Testing gameplay loop from app/wordguess.py
+from app import wordguess
 
 def test_choose_word():
     """

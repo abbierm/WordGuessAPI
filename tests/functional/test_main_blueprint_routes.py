@@ -4,7 +4,7 @@ test_main_blueprint_routes.py tests the main blueprint routes to make sure they 
 
 def test_index(test_client):
     """
-    GIVEN a Flask application configed for testing
+    GIVEN a Flask application configured for testing
     WHEN the '/' page is requested (GET)
     THEN check if the response is valid
     """

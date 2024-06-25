@@ -3,9 +3,9 @@ from datetime import datetime, timezone, timedelta
 from time import time
 import secrets
 import sqlalchemy as sa
-from sqlalchemy import func, and_
+from sqlalchemy import and_
 import sqlalchemy.orm as so
-from typing import Optional
+from typing import Optional, List
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -20,8 +20,8 @@ class User(UserMixin, db.Model):
                                              unique=True)
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
     confirmed: so.Mapped[bool] = so.mapped_column(sa.Boolean(), default=False)
-    solvers: so.WriteOnlyMapped['Solver'] = so.relationship(
-                                        back_populates='user', cascade='all, delete-orphan', passive_deletes=True)
+    solvers: so.Mapped[List['Solver']] = so.relationship(
+                                        lazy="joined", cascade='all, delete-orphan', passive_deletes=True)
    
     #===========================================================================
     # API user lookup
@@ -31,7 +31,8 @@ class User(UserMixin, db.Model):
         payload = {
             "id": self.id,
             "username": self.username,
-            "email": self.email
+            "email": self.email,
+            "solvers": [solver.name for solver in self.solvers]
         }
         return payload
     
@@ -41,8 +42,10 @@ class User(UserMixin, db.Model):
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
+        # db.session.add(self)
+        # db.session.commit()
 
-    def check_password(self, password) ->bool:
+    def check_password(self, password) -> bool:
         return check_password_hash(self.password_hash, password)
     
     def get_reset_password_token(self, expires_in=600):
@@ -107,8 +110,7 @@ class Solver(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
     user_id: so.Mapped[int] = so.mapped_column(
-                                    sa.ForeignKey(User.id), index=True)
-    user: so.Mapped[User] = so.relationship(back_populates='solvers')
+                                    sa.ForeignKey(User.id, ondelete="cascade"))
     words_played: so.Mapped[int] = so.mapped_column(default=0)
     words_won: so.Mapped[int] = so.mapped_column(default=0)
     avg: so.Mapped[float] = so.mapped_column(default=0)
@@ -119,7 +121,7 @@ class Solver(db.Model):
     games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver',
                             cascade='all, delete-orphan', passive_deletes=True)
     api_key: so.Mapped[Optional[str]] = so.mapped_column(
-                                    sa.String(32), index=True, unique=True, nullable=True)
+                                    sa.String(32), index=True, unique=True, nullable=True, default=None)
     
 
     #===========================================================================
@@ -132,6 +134,10 @@ class Solver(db.Model):
             "user_id": self.user_id,
             "words_played": self.words_played,
             "words_won": self.words_won,
+            "avg_guesses": self.avg_guesses,
+            "avg_won": self.avg,
+            "max_streak": self.max_streak,
+            "api_key": self.api_key
         }
         return payload
     
@@ -139,7 +145,7 @@ class Solver(db.Model):
         self.api_key = secrets.token_hex(16)
         db.session.add(self)
         db.session.commit()
-        return self.api_key
+        return
     
     @staticmethod
     def check_key(key):
@@ -157,30 +163,28 @@ class Solver(db.Model):
                                         User.username == username))
         solver = db.session.scalar(sa.select(Solver).where(
                                         Solver.name == solver_name))
-        if user.id != solver.user_id:
+                                        
+        if solver is None or user is None:
             return False
-        return True
+        elif user.id != solver.user_id:
+            return False
+        else:
+            return True
         
 
     #===========================================================================
     # Solver Gameplay Stat Functions 
     #===========================================================================
    
-
-    def calculate_avg_guesses(self) -> float:
+    def calculate_avg_guesses(self, guess_count: int) -> float:
         """Calculates the avg number of guesses only in winning games."""
-        results = db.session.execute(
-                            sa.select(Game.id, Game.guess_count)
-                            .where(and_(Game.solver_id == self.id, 
-                            Game.results == True)))
-        count = 0
-        guess_count = 0
-        for row in results:
-            count += 1
-            guess_count += row[1]
-        return round((guess_count / count), 2)
-    
-    def update_stats(self, won: bool):
+        if self.avg_guesses == None:
+            return float(guess_count)
+        guess_sum = self.avg_guesses * (self.words_won - 1)
+        new_guess_avg = round(((guess_sum + guess_count) / self.words_won), 2)
+        return new_guess_avg
+        
+    def update_stats(self, won: bool, guess_count: int):
         """Updates stats after a game. Not used for a clean refresh."""
         self.words_played += 1
         if won == True:
@@ -192,7 +196,7 @@ class Solver(db.Model):
             self.current_streak = 0
         self.avg = round(((self.words_won / self.words_played) * 100), 2)
         if won == True:
-            self.avg_guesses = self.calculate_avg_guesses()
+            self.avg_guesses = self.calculate_avg_guesses(guess_count)
         db.session.add(self)
         db.session.commit()
 
@@ -202,15 +206,20 @@ class Solver(db.Model):
         self.words_played = 0
         self.avg = 0
         self.words_won = 0
+        self.avg_guesses = None
+        self.current_streak = 0
+        self.max_streak = 0
         db.session.add(self)
         db.session.commit()
 
+
     def get_games(self, filter=None):
-       if filter is None or filter != "lost" and filter != "won":
+        """Returns a game query not executed"""
+        if filter is None or filter != "lost" and filter != "won":
            return sa.select(Game).where(Game.solver_id == self.id)
-       elif filter == "lost":
+        elif filter == "lost":
            return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == False))
-       elif filter == "won":
+        elif filter == "won":
            return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == True))
 
 
@@ -219,7 +228,7 @@ class Game(db.Model):
     solver_id: so.Mapped[int] = so.mapped_column(
                                         sa.ForeignKey(Solver.id),index=True)
     token: so.Mapped[Optional[str]] = so.mapped_column(
-                                        sa.String(32),index=True, unique=True)
+                                        sa.String(32),index=True, unique=True, default=None)
     token_expiration: so.Mapped[Optional[datetime]]
     timestamp: so.Mapped[datetime] = so.mapped_column(index=True, 
                                     default=lambda: datetime.now(timezone.utc))
@@ -288,7 +297,6 @@ class Game(db.Model):
             'message': 'None',
             'results': 'None'
         }
-        
         if include_feedback == True:
             guess_list = self.guesses.split(', ')
             feedback_list = self.feedback.split(', ')

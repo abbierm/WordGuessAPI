@@ -64,11 +64,10 @@ def game_loop(game_id, guess:str):
     if _validate_guess(guess) == False:
         return user_game.create_payload(message='Word not found in our dictionary.')
     feedback = _feedback(user_game.correct_word, guess)
-    
     user_game.update_game(guess, feedback)
     if user_game.status == False:
         solver = db.session.scalar(sa.select(Solver).where(Solver.id == user_game.solver_id))
-        solver.update_stats(user_game.results)
+        solver.update_stats(user_game.results, user_game.guess_count)
         return user_game.create_payload(
                 include_correct=True, include_feedback=True)
     return user_game.create_payload(include_feedback=True)
