@@ -306,13 +306,75 @@ def test_update_game(init_database, active_game):
     assert active_game.feedback == "BBYBB"
 
 
+def test_get_token(init_database, active_game):
+    """
+    Tests both the get_token() and check_toke() methods
 
-# TODO: Test check token
+    GIVEN a database and active game row instance,
+    WHEN creating a new token using the get_token() method
+    THEN check if check_token() static method with the token 
+        as an argument returns True
+    """
+    assert active_game.token is None
+    active_game.get_token()
+    assert Game.check_token(active_game.token) == True
 
-# TODO: Test up
- 
-# TODO: test game get token
 
-# TODO: Test creating payload with feedback
+def test_game_payload_with_correct_word(init_database, active_game):
+    """
+    GIVEN a database and active game row instance,
+    WHEN calling the create_payload method with include_correct=True,
+    THEN check if the payload is correct
+    """
+    payload = active_game.create_payload(include_correct=True)
+    assert payload['game_id'] == active_game.id
+    assert payload['correct_word'] == 'flask'
+    assert payload['status'] == True
 
-# TODO: Test creating payload without feedback
+
+def test_game_payload_without_correct_word(init_database, active_game):
+    """
+    GIVEN a database and active game row instance,
+    WHEN calling the create_payload method with include_correct=False,
+    THEN check if the payload is correct
+    """
+    payload = active_game.create_payload(include_correct=False)
+    assert payload['game_id'] == active_game.id
+    assert payload['correct_word'] == '*****'
+    assert payload['status'] == True
+
+
+def test_game_payload_with_feedback(init_database, active_game_2):
+    """
+    GIVEN a database and active game row instance,
+    WHEN calling the create_payload method with include_feedback=True,
+    THEN check if the payload is correct
+    """
+    
+    payload = active_game_2.create_payload(include_feedback=True)
+    assert payload["guesses"] == {
+                            1: {"guess": "tests", "feedback": "YYBBB"}, 
+                            2: {"guess": "corgi", "feedback": "BBYYB"}
+                        }
+
+
+def test_game_payload_without_feedback(init_database, active_game_2):
+    """
+    GIVEN a database and active game row instance,
+    WHEN calling the create_payload method with include_feedback=False,
+    THEN check that the payload doesn't have the guesses key
+    """
+    
+    payload = active_game_2.create_payload(include_feedback=False)
+    assert payload["guesses"] == {}
+  
+
+def test_game_payload_with_message(init_database, active_game_2):
+    """
+    GIVEN a database and active game row instance,
+    WHEN calling the create_payload method with a message,
+    THEN check that the payload contains the given message
+    """
+    
+    payload = active_game_2.create_payload(message='Word not found in our dictionary.')
+    assert payload["message"] == 'Word not found in our dictionary.'

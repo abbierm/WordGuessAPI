@@ -99,24 +99,16 @@ def preload_solver(init_database):
 
     user.set_password('test_password')
 
-    some_user_lookup = db.session.scalar(
-            db.select(User).where(
-                User.username == 'some_test_user')
-        )
-
-
     solver = Solver(
         name='someSolver',
-        user_id = some_user_lookup.id
+        user_id = user.id
     )
 
     db.session.add(solver)
     db.session.commit()
 
-    solverID = solver.id
-
     test_game_get_games = Game(
-        solver_id=solverID,
+        solver_id=solver.id,
         correct_word='tests',
         guess_count=4,
         guesses='aisle, files, texts, tests',
@@ -134,7 +126,7 @@ def preload_solver(init_database):
 
 
 @pytest.fixture()
-def active_game(init_database, solver_lookup):
+def active_game(init_database):
     """
     Creates a new user, solver, and an active game. 
     Returns the active game instance
@@ -165,3 +157,44 @@ def active_game(init_database, solver_lookup):
     db.session.commit()
 
     return active_test_game
+
+
+@pytest.fixture()
+def active_game_2(init_database):
+    """
+    Creates a new user, solver, and an active 
+    game with 2 guesses and 2 feedback responses.
+
+    Returns the active game instance
+    """
+
+    user = User(
+        username='c_user', 
+        email='c_user@gmail.com', 
+        confirmed=True
+    )
+
+    user.set_password('c_test_password')
+    db.session.add(user)
+    db.session.commit()
+
+    solver = Solver(
+        name='someSolverC',
+        user_id = user.id
+    )
+    db.session.add(solver)
+    db.session.commit()
+
+    active_test_game = Game(
+        solver_id=solver.id,
+        correct_word='great',
+        guess_count=2,
+        guesses="tests, corgi",
+        feedback="YYBBB, BBYYB"
+    )
+    
+    db.session.add(active_test_game)
+    db.session.commit()
+    
+    return active_test_game
+
