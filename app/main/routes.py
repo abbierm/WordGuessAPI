@@ -19,11 +19,12 @@ def documentation():
 
 
 @login_required
-@bp.route('/user/<username>', methods=["GET", 'POST'])
+@bp.route('/user/<username>', methods=["GET"])
 def user(username):
     user = db.session.scalar(sa.select(User).where(User.username == username))
+    print(user)
     if not user:
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
     
     solvers = db.session.scalars(sa.select(Solver).where(Solver.user_id==user.id))
     return render_template('/user.html', user=user, solvers=list(solvers))

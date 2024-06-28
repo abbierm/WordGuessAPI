@@ -7,194 +7,206 @@ from app.models import User, Solver, Game
 from config import Config
 from datetime import datetime, timezone, timedelta
 import sqlalchemy as sa
+import sys
 
 class TestConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def new_user():
     user = User(username='a_cool_username', email='aTestEmail@email.com')
-    # user.set_password('insecurePassword')
     return user
 
 
-@pytest.fixture()
+@pytest.fixture
 def new_solver(new_user):
     solver = Solver(name='word_guess_solver', user_id=1, words_won=0, words_played=0)
     return solver
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def test_client():
     flask_app = create_app(TestConfig)
 
-    with flask_app.test_client() as testing_client:
-        with flask_app.app_context():
-            yield testing_client
+    # with flask_app.test_client() as testing_client:
+    #     with flask_app.app_context():
+    #         yield testing_client
+
+    client = flask_app.test_client()
+    ctx = flask_app.test_request_context()
+    ctx.push()
+
+    yield client 
+
+    ctx.pop()
 
     
-
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def init_database(test_client):
     db.create_all()
-    
-    
-    yield
 
-    # Test Stuff
-
-    db.drop_all()
-    
-
-@pytest.fixture()
-def user_lookup(init_database):
-    """
-    Returns user 'a_user' object so don't need to continuously look up users when testing class methods in the ORM
-    """
     user = User(
-            username='a_user_2', 
-            email='test_email_user2@gmail.com', 
-            confirmed=True)
+            username='user1', 
+            email='u1@gmail.com', 
+            confirmed=True
+        )
     user.set_password('test_password')
     db.session.add(user)
     db.session.commit()
-    user = db.session.scalar(db.select(User).where(User.username == 'a_user_2'))
-    return user
 
+    user2 = User(
+            username='user2', 
+            email='u2@gmail.com', 
+            confirmed=True
+        )
+    user2.set_password('test_password')
+    db.session.add(user2)
 
-@pytest.fixture()
-def solver_lookup(user_lookup, init_database):
-    """
-    Returns a solver for testing
-    """
-    solver = Solver(
-            name='stats_solver',
-            user_id=user_lookup.id,
+    user3 = User(
+            username='user3', 
+            email='u3@gmail.com', 
+            confirmed=True
+        )
+    user3.set_password('test_password')
+    db.session.add(user3)
+
+    user4 = User(
+            username='user4', 
+            email='u4@gmail.com', 
+            confirmed=True
+        )
+    user4.set_password('test_password')
+    db.session.add(user4)
+
+    db.session.commit()
+
+    solver11 = Solver(
+            name='solver11',
+            user_id=user.id
+        )
+    db.session.add(solver11)
+
+    solver21 = Solver(
+            name='solver21',
+            user_id=user2.id,
             words_played=10,
             words_won=8,
             avg_guesses=4.5,
             avg=80,
             max_streak=5,
             current_streak=5,
-            api_key='bd64d06a6d271e3a9254afd0e7a94976'
-    )
-    db.session.add(solver)
+            api_key='bd64d06a6d271e3a9254afd0e7a94977'
+        )
+    db.session.add(solver21)
+
+    solver22 = Solver(
+            name='solver22',
+            user_id=user2.id,
+            words_played=100,
+            words_won=50,
+            avg_guesses=5,
+            avg=50,
+            max_streak=10,
+            current_streak=0,
+            api_key='bd64d06a6d271e3a9254afd0e7a94978'
+        )
+    db.session.add(solver22)
+
+    solver41 = Solver(
+            name='solver41',
+            user_id=user4.id,
+            words_played=2,
+            words_won=1,
+            avg_guesses=5,
+            avg=50,
+            max_streak=1,
+            current_streak=1,
+            api_key='bd64d06a6d271e3a9254afd0e7a94941'
+        )
+    db.session.add(solver41)
+
     db.session.commit()
+
+    game211 = Game(
+            solver_id=solver21.id,
+            correct_word='tests',
+            guess_count=4,
+            guesses='aisle, files, texts, tests',
+            feedback='BBGBY, BBBYG, GGBGG, GGGGG',
+            status=False,
+            results=True
+        )
+    db.session.add(game211)
+
+    game221 = Game(
+            solver_id=solver21.id,
+            correct_word='great',
+            guess_count=2,
+            guesses="tests, corgi",
+            feedback="YYBBB, BBYYB",
+            status=True
+        )
+    db.session.add(game221)
     
-    return solver
 
-
-
-@pytest.fixture()
-def preload_solver(init_database):
-    user = User(
-        username='some_test_user', 
-        email='someEmail4Tests@gmail.com', 
-        confirmed=True
-    )
-
-    db.session.add(user)
-    db.session.commit()
-
-    user.set_password('test_password')
-
-    solver = Solver(
-        name='someSolver',
-        user_id = user.id
-    )
-
-    db.session.add(solver)
-    db.session.commit()
-
-    test_game_get_games = Game(
-        solver_id=solver.id,
-        correct_word='tests',
-        guess_count=4,
-        guesses='aisle, files, texts, tests',
-        feedback='BBGBY, BBBYG, GGBGG, GGGGG',
-        status=False,
-        results=True
-    )
-
-    db.session.add(test_game_get_games)
-    db.session.commit()
-
-    solver.update_stats(True, 4)
-
-    return solver
-
-
-@pytest.fixture()
-def active_game(init_database):
-    """
-    Creates a new user, solver, and an active game. 
-    Returns the active game instance
-    """
-
-    user = User(
-        username='b_user', 
-        email='b_user@gmail.com', 
-        confirmed=True
-    )
-    user.set_password('b_test_password')
-    db.session.add(user)
-    db.session.commit()
-
-    solver = Solver(
-        name='someSolver',
-        user_id = user.id
-    )
-    db.session.add(solver)
-    db.session.commit()
-
-    active_test_game = Game(
-        solver_id=solver.id,
-        correct_word='flask'
-    )
-
-    db.session.add(active_test_game)
-    db.session.commit()
-
-    return active_test_game
-
-
-@pytest.fixture()
-def active_game_2(init_database):
-    """
-    Creates a new user, solver, and an active 
-    game with 2 guesses and 2 feedback responses.
-
-    Returns the active game instance
-    """
-
-    user = User(
-        username='c_user', 
-        email='c_user@gmail.com', 
-        confirmed=True
-    )
-
-    user.set_password('c_test_password')
-    db.session.add(user)
-    db.session.commit()
-
-    solver = Solver(
-        name='someSolverC',
-        user_id = user.id
-    )
-    db.session.add(solver)
-    db.session.commit()
-
-    active_test_game = Game(
-        solver_id=solver.id,
-        correct_word='great',
-        guess_count=2,
-        guesses="tests, corgi",
-        feedback="YYBBB, BBYYB"
-    )
+    game411 = Game(
+            solver_id=solver41.id,
+            correct_word='bleak',
+            guess_count=6,
+            guesses="tests, corgi, flask, ghost, these, bleep",
+            feedback="BYBBB, BBBBB, BGYBG, BBBYY, YBYYB, GGGBB",
+            status=False,
+            results=False
+        )
     
-    db.session.add(active_test_game)
-    db.session.commit()
-    
-    return active_test_game
+    db.session.add(game411)
 
+    game412 = Game(
+            solver_id=solver41.id,
+            correct_word='beats',
+            guess_count=5,
+            guesses="tests, corgi, flask, ghost, beats",
+            feedback="BGBGG, BBBBB, BBGYB, BBBYY, GGGGG",
+            status=False,
+            results=True
+        )
+    
+    db.session.add(game412)
+    db.session.commit()
+
+    
+    yield test_client
+
+    db.drop_all()
+
+
+
+
+
+#====================================================================
+# Authentication Class to pass to @login_required routes
+#====================================================================
+
+
+
+
+
+class AuthActions(object):
+    def __init__(self, client):
+        self._client = client
+    
+    def login(self):
+
+        return self._client.post(
+            '/auth/login',
+            data={'username': 'user2', 'password': 'test_password'}, 
+        )
+
+    def logout(self):
+        return self._client.get('/auth/logout')
+
+
+@pytest.fixture
+def auth(test_client, init_database):
+    return AuthActions(test_client)
