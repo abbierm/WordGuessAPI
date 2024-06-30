@@ -12,25 +12,26 @@ def index():
         return redirect(url_for('main.user', username=current_user.username))
     else:
         return render_template('index.html')
-    
+
+
 @bp.route('/documentation', methods=["GET"])
 def documentation():
     return render_template("/documentation.html")
 
 
-@login_required
 @bp.route('/user/<username>', methods=["GET"])
+@login_required
 def user(username):
     user = db.session.scalar(sa.select(User).where(User.username == username))
-    print(user)
     if not user:
         return redirect(url_for('main.index'))
     
     solvers = db.session.scalars(sa.select(Solver).where(Solver.user_id==user.id))
     return render_template('/user.html', user=user, solvers=list(solvers))
 
-@login_required
+
 @bp.route('/reset_solver', methods=["POST"])
+@login_required
 def reset_solver():
     if request.method == "POST" and current_user.is_authenticated:
         solver_id = request.form.get("solver")
@@ -42,8 +43,9 @@ def reset_solver():
     else:
         return redirect(url_for('main.index'))
 
-@login_required
+
 @bp.route('/delete_solver', methods=["POST"])
+@login_required
 def delete_solver():
     if request.method == "POST" and current_user.is_authenticated:
         solver_id = request.form.get("solver")
@@ -57,34 +59,35 @@ def delete_solver():
         return redirect(url_for('main.user', username=current_user.username))
     else:
         return redirect(url_for('main.index'))
-        
-@login_required
+
+
 @bp.route('/solver/<solver_name>/', methods=["GET"])
-def solver(solver_name, filter=None):
-    if current_user.is_authenticated:
-        page = request.args.get('games', 1, type=int)
-        filter = request.args.get('filter')
-        solver = db.session.scalar(sa.select(Solver)
-                            .where(Solver.name == solver_name))
-        
-        games = db.paginate(solver.get_games(filter=filter), page=page, 
-                                    per_page=50, error_out=False)
-        
-        next_url = url_for('main.solver', solver_name=solver.name, 
-                           filter=filter, games=games.next_num) \
-                if games.has_next else None
-        prev_url = url_for('main.solver', solver_name=solver.name, 
-                           filter=filter, games=games.prev_num) \
-                if games.has_prev else None
-        
-        return render_template('/solver.html', solver=solver, prev_url=prev_url, next_url=next_url, 
-                            games=games)
-    else:
-        return redirect(url_for('main.index'))
-
-
 @login_required
+def solver(solver_name, filter=None):
+    if not current_user.is_authenticated:
+        flash('Must be logged in to view solver pages')
+        return redirect(url_for('main.index'))
+    solver = db.session.scalar(sa.select(Solver)
+                        .where(Solver.name == solver_name))
+    if not solver or solver.user_id != current_user.id:
+        flash(f"{solver.name} is not registered under your WordGuessAPI account.")
+        return redirect(url_for('main.index'))
+    page = request.args.get('games', 1, type=int)
+    filter = request.args.get('filter')
+    games = db.paginate(solver.get_games(filter=filter), page=page,
+                            per_page=50, error_out=False)
+    next_url = url_for('main.solver', solver_name=solver.name, 
+                       filter=filter, games=games.next_num) \
+            if games.has_next else None
+    prev_url = url_for('main.solver', solver_name=solver.name, 
+                       filter=filter, games=games.prev_num) \
+            if games.has_prev else None
+    return render_template('/solver.html', solver=solver, 
+            prev_url=prev_url, next_url=next_url, games=games)
+    
+        
 @bp.route('/create_api_key', methods=["POST"])
+@login_required
 def create_new_key():
     if request.method == "POST" and current_user.is_authenticated:
         solver_id = request.form.get("solver")
@@ -92,4 +95,3 @@ def create_new_key():
         solver.make_api_key()
         return redirect(url_for('main.solver', solver_name=solver.name))
     
-

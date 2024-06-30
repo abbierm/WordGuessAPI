@@ -1,13 +1,10 @@
-import os
-
 import pytest
-
 from app import create_app, db
 from app.models import User, Solver, Game
 from config import Config
 from datetime import datetime, timezone, timedelta
 import sqlalchemy as sa
-import sys
+
 
 class TestConfig(Config):
     TESTING = True
@@ -28,11 +25,6 @@ def new_solver(new_user):
 @pytest.fixture(scope="session")
 def test_client():
     flask_app = create_app(TestConfig)
-
-    # with flask_app.test_client() as testing_client:
-    #     with flask_app.app_context():
-    #         yield testing_client
-
     client = flask_app.test_client()
     ctx = flask_app.test_request_context()
     ctx.push()
@@ -125,7 +117,31 @@ def init_database(test_client):
             api_key='bd64d06a6d271e3a9254afd0e7a94941'
         )
     db.session.add(solver41)
-
+    solver42 = Solver(
+            name='solver42', 
+            user_id=4,
+            words_played=100,
+            words_won=90,
+            avg=90,
+            avg_guesses=5.1,
+            max_streak=89,
+            current_streak=0,
+            api_key='bd64d06a6d271e3a9254afd0e7a94942'
+        )
+    db.session.add(solver42)
+    
+    solver43 = Solver(
+            name='solver43', 
+            user_id=user4.id,
+            words_played=100,
+            words_won=90,
+            avg=90,
+            avg_guesses=5.1,
+            max_streak=89,
+            current_streak=0,
+            api_key='bd64d06a6d271e3a9254afd0e7a94943'
+        )
+    db.session.add(solver43)
     db.session.commit()
 
     game211 = Game(
@@ -171,8 +187,18 @@ def init_database(test_client):
             status=False,
             results=True
         )
-    
     db.session.add(game412)
+
+    game431 = Game(
+            solver_id=solver43.id,
+            correct_word='quite',
+            guess_count=3,
+            guesses="ghost, telex, quite",
+            feedback="BBBBY, YYBBB, GGGGG",
+            status=False,
+            results=True
+        )
+    db.session.add(game431)
     db.session.commit()
 
     
@@ -180,17 +206,9 @@ def init_database(test_client):
 
     db.drop_all()
 
-
-
-
-
 #====================================================================
 # Authentication Class to pass to @login_required routes
 #====================================================================
-
-
-
-
 
 class AuthActions(object):
     def __init__(self, client):
@@ -200,7 +218,7 @@ class AuthActions(object):
 
         return self._client.post(
             '/auth/login',
-            data={'username': 'user2', 'password': 'test_password'}, 
+            data={'username': 'user4', 'password': 'test_password'}, 
         )
 
     def logout(self):
