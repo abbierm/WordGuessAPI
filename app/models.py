@@ -284,7 +284,12 @@ class Game(db.Model):
         db.session.add(self)
         db.session.commit()
                 
-    def create_payload(self, include_correct=False, include_feedback=False, message=None):
+    def create_payload(
+        self, 
+        include_correct=False, 
+        include_feedback=False, 
+        message=None
+    ):
         payload = {
             'game_id': self.id,
             'token': self.token,

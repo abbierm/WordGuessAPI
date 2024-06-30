@@ -22,7 +22,8 @@ def new_solver(new_user):
     solver = Solver(name='word_guess_solver', user_id=1, words_won=0, words_played=0)
     return solver
 
-@pytest.fixture(scope="session")
+
+@pytest.fixture(scope="module")
 def test_client():
     flask_app = create_app(TestConfig)
     client = flask_app.test_client()
@@ -34,7 +35,7 @@ def test_client():
     ctx.pop()
 
     
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def init_database(test_client):
     db.create_all()
 
@@ -198,6 +199,7 @@ def init_database(test_client):
             status=False,
             results=True
         )
+
     db.session.add(game431)
     db.session.commit()
 
@@ -205,6 +207,30 @@ def init_database(test_client):
     yield test_client
 
     db.drop_all()
+
+
+#====================================================================
+# Game Session For API gameplay
+#+===================================================================
+@pytest.fixture(scope="module")
+def active_game(test_client, init_database):
+    
+    game432 = Game(
+        solver_id=6,
+        correct_word='buddy',
+        guess_count=0,
+        guesses="",
+        feedback="",
+        status=True,
+        results=False
+    )
+    db.session.add(game432)
+    db.session.commit()
+
+    game432.get_token()
+    return game432.create_payload()
+
+    
 
 #====================================================================
 # Authentication Class to pass to @login_required routes
