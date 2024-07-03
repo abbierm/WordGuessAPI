@@ -60,6 +60,9 @@ def make_guess():
     return response
 
 
+#====================================================================
+# api lookups to pull information from database
+#====================================================================
 @bp.route('/lookup_solver/<string:solver_name>', methods=["GET"])
 def lookup_solver(solver_name):
     solver = db.session.scalar(db.select(Solver).where(Solver.name == solver_name))
@@ -68,10 +71,7 @@ def lookup_solver(solver_name):
     payload = solver.to_dict()
     return payload
 
-
-#====================================================================
-# api lookups to pull information from database
-#====================================================================
+    
 @bp.route('/lookup_user_solvers/<string:username>', methods=["GET"])
 def lookup_user(username: str):
     """ Returns all the solver's and stats owned by specific username. """
@@ -94,7 +94,6 @@ def lookup_user(username: str):
     return solvers_payload
 
 
-
 @bp.route('/create_account', methods=["POST"])
 def create_account():
     data = request.get_json()
@@ -115,3 +114,4 @@ def create_account():
     return new_user.to_dict()
 
     
+# TODO: Add lookup for ALL the games data

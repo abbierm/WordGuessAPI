@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from time import time
 import secrets
 import sqlalchemy as sa
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 import sqlalchemy.orm as so
 from typing import Optional, List
 from flask_login import UserMixin
@@ -23,9 +23,9 @@ class User(UserMixin, db.Model):
     solvers: so.Mapped[List['Solver']] = so.relationship(
                                         lazy="joined", cascade='all, delete-orphan', passive_deletes=True)
    
-    #===========================================================================
+    #================================================================
     # API user lookup
-    #===========================================================================
+    #================================================================
     
     def to_dict(self):
         payload = {
@@ -36,9 +36,9 @@ class User(UserMixin, db.Model):
         }
         return payload
     
-    #===========================================================================
+    #================================================================
     # Password setting / hashing / resetting 
-    #===========================================================================
+    #================================================================
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -62,9 +62,9 @@ class User(UserMixin, db.Model):
             return
         return db.session.get(User, id)
     
-    #===========================================================================
+    #================================================================
     # Account Confirmation Token
-    #===========================================================================
+    #================================================================
 
     def generate_confirmation_token(self, expires_in=600):
         return jwt.encode(
@@ -79,9 +79,9 @@ class User(UserMixin, db.Model):
             return
         return db.session.get(User, id)
 
-    #===========================================================================
-    # Registration safeguards to prevent duplicates username/emails
-    #===========================================================================
+    #================================================================
+    # Registration safeguards 
+    #================================================================
 
     @staticmethod
     def check_duplicate_username(new_username: str) -> bool:
@@ -106,6 +106,9 @@ def load_user(id):
 
 
 
+#==============================================================================
+# Solver 
+#==============================================================================
 class Solver(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
@@ -124,9 +127,9 @@ class Solver(db.Model):
                                     sa.String(32), index=True, unique=True, nullable=True, default=None)
     
 
-    #===========================================================================
+    #================================================================
     # API 
-    #===========================================================================
+    #================================================================
     def to_dict(self):
         payload = {
             "id": self.id,
@@ -172,9 +175,9 @@ class Solver(db.Model):
             return True
         
 
-    #===========================================================================
+    #================================================================
     # Solver Gameplay Stat Functions 
-    #===========================================================================
+    #================================================================
    
     def calculate_avg_guesses(self, guess_count: int) -> float:
         """Calculates the avg number of guesses only in winning games."""
@@ -212,7 +215,6 @@ class Solver(db.Model):
         db.session.add(self)
         db.session.commit()
 
-
     def get_games(self, filter=None):
         """Returns a game query not executed"""
         if filter is None or filter != "lost" and filter != "won":
@@ -222,7 +224,22 @@ class Solver(db.Model):
         elif filter == "won":
            return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == True))
 
+    def _update_stats(self):
+        """
+        Recalculates its stats based on all of the games played.
+        """
+        games_played = db.session.scalar(sa.select(func.count(Game.id)).where(Game.solver_id == self.id))
+        games_won = db.session.scalar(sa.select(func.count(Game.id)).where(and_(Game.solver_id == self.id, Game.results == True)))
+        self.words_played = games_played
+        self.words_won = games_won
+        self.calculate_avg_guesses
+        db.session.add(self)
+        db.session.commit()
 
+
+#==============================================================================
+# Game Table
+#==============================================================================
 class Game(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     solver_id: so.Mapped[int] = so.mapped_column(

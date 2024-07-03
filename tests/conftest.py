@@ -2,8 +2,6 @@ import pytest
 from app import create_app, db
 from app.models import User, Solver, Game
 from config import Config
-from datetime import datetime, timezone, timedelta
-import sqlalchemy as sa
 
 
 class TestConfig(Config):
@@ -230,7 +228,6 @@ def active_game(test_client, init_database):
     game432.get_token()
     return game432.create_payload()
 
-    
 
 #====================================================================
 # Authentication Class to pass to @login_required routes

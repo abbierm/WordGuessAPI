@@ -105,7 +105,6 @@ def test_invalid_api_key_non_matching_start(test_client):
             )
     assert response.status_code == 400
     game_data = response.get_json()
-    print(game_data["message"])
     assert game_data['message'] == "User id doesn't match id from solver_api key.  Check your user id and solve id via our website."
 
 
