@@ -93,25 +93,4 @@ def lookup_user(username: str):
         solvers_payload["solvers"][solver.name] = solver.to_dict()
     return solvers_payload
 
-
-@bp.route('/create_account', methods=["POST"])
-def create_account():
-    data = request.get_json()
-
-    # Validate info before adding new user
-    if 'username' not in data or 'email' not in data or 'password' not in data:
-        return bad_request('Must include username, email, and password fields')
-    if User.check_duplicate_username(data['username']) == True:
-        return bad_request('Username already in use by another user, please try again with a different username')
-    if User.check_duplicate_email(data['email']) == True:
-        return bad_request('Email already associated with another account.')
-    
-    # Adds new user to the database
-    new_user = User(username=data['username'], email=data['email'])
-    new_user.set_password(data['password'])
-    db.session.add(new_user)
-    db.session.commit()
-    return new_user.to_dict()
-
-    
 # TODO: Add lookup for ALL the games data
