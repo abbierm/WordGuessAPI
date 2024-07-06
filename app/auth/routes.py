@@ -27,6 +27,7 @@ def login():
 @bp.route('/logout', methods=["GET"])
 def logout():
     logout_user()
+    flash("You have successfully been logged out!")
     return redirect(url_for("main.index")) 
 
 
@@ -40,10 +41,8 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-
         # Initial confirmation token 
         send_confirmation_email(user)
-
         flash('Congratulations, you are now a registered user!, Please check your email for a confirmation link that will allow you to use our API')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
@@ -85,7 +84,6 @@ def reset_password_request():
             return redirect(url_for('auth.login'))
         else:
             flash('Unable to find account linked to that email.')
-        
     return render_template('auth/reset_password_request.html', form=form)
 
 
