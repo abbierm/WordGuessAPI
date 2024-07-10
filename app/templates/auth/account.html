@@ -5,16 +5,63 @@
 {% endblock title %}
 
 {% block main %}
-<div class="title-box">
-    <h1 class="title">Account</h1>
+<div class="page-container">
+    <div class="title-box">
+        <h1 class="title">Account Settings</h1>
+    </div>
+    <div>
+        <div class="basic-info-container">
+            <h2 class="account-heading">Basic Info</h2>
+            <hr>
+            <table class="account-table">
+                <tr>
+                    <th class="account-table-heading">username</th>
+                    <td class="account-table-item">{{ user.username }}</td>
+                    <td class="account-table-item">#TODO change username?</td>
+                </tr>
+                <tr>
+                    <th class="account-table-heading">email</th>
+                    <td class="account-table-item">{{ user.email }}</td>
+                    <td class="account-table-item">#TODO: change email</td>
+                </tr>
+                <tr>
+                    <th class="account-table-heading">account status</th>
+                    {% if user.confirmed == True %}
+                        <td class="account-table-item">Confirmed</td>
+                        <td class="account-table-item"></td>
+                    {% else %}
+                        <td class="account-table-item">Unconfirmed Email Address</td>   
+                        <td class="account-table-item">    
+                            <a href="{{ url_for('auth.resend_confirmation') }}">Resend Confirmation</a>
+                        </td>
+                    {% endif %}
+                </tr>
+            </table>
+        </div>
+        <br>
+        <br>
+        <div class="basic-info-container">
+            <h2 class="account-heading">Manage Account</h2>
+            <hr>
+            <table class="account-table">
+                <tr>
+                    <td class="account-table-item">Reset Password</td>
+                    <td class="account-table-item">
+                        <a href="{{ url_for('auth.reset_password_request') }}">Reset Password</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="account-table-item">Resets Account</td>
+                    <td class="account-table-item"># TODO: Reset Account</td>
+                </tr>
+                <tr>
+                    <td class="account-table-item">Delete Account</td>
+                    <td class="account-table-item"># TODO: Perm Delete</td>
+                </tr>
+            </table>
+        </div>
+    </div>
 </div>
-<div>
-    <p>Hello {{ user.username }}</p>
-</div>
-<div>
-    <a href="{{ url_for('auth.resend_confirmation') }}">Resend Confirmation</a>
-    <br>
-    <a href="{{ url_for('auth.reset_password_request') }}">Reset Password</a>
-</div>
+
 
 {% endblock main %}
