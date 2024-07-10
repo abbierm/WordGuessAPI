@@ -73,14 +73,17 @@ def resend_confirmation():
 
 @bp.route('/reset_password_request', methods=["GET", "POST"])
 def reset_password_request():
-    if current_user.is_authenticated:
+    if not current_user.is_authenticated:
         return redirect(url_for('main.index'))
     form = ResetPasswordRequestForm()
     if form.validate_on_submit():
         user = db.session.scalar(sa.select(User).where(User.email == form.email.data))
         if user:
+            user.confirmed=False
+            db.session.add(user)
+            db.session.commit()
             send_password_reset_email(user)
-            flash('Check your email for a link to reset your password')
+            flash('Check your email for a link to reset your password!')
             return redirect(url_for('auth.login'))
         else:
             flash('Unable to find account linked to that email.')
@@ -89,8 +92,6 @@ def reset_password_request():
 
 @bp.route('/reset_password/<token>', methods=["GET", "POST"])
 def reset_password(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
     user = User.verify_reset_password_token(token)
     if not user:
         flash('Invalid or expired reset token.')
@@ -98,8 +99,9 @@ def reset_password(token):
     form = ResetPasswordForm()
     if form.validate_on_submit():
         user.set_password(form.password.data)
+        user.confirmed=True
         db.session.commit()
-        flash('Your password has been updated.')
+        flash('Your password has been updated!')
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_password.html', form=form)
 
