@@ -47,8 +47,6 @@ def add_me():
     add_regex()
     
     
-
-
 @dataclass
 class ExampleGame:
     solver_id: int
