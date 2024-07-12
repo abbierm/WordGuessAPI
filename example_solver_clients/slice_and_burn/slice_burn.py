@@ -15,7 +15,7 @@ from typing import Optional
 
 
 URL = 'http://127.0.0.1:5000/'
-API_KEY = 'secret key'
+API_KEY = 'fe6431e4220cc1e68e08b85d390e94c8'
 
 
 # =========================================================================

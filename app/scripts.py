@@ -12,15 +12,23 @@ from dataclasses import dataclass
 
 # Add Solvers
 def add_regex():
-    regex = Solver(name='regex', user_id=1)
+    regex = Solver(
+        name='regex', 
+        user_id=1,
+        api_key='987a17e0add886d85f7f465e7cb3fde1'
+    )
     db.session.add(regex)
     db.session.commit()
-    return regex
+    return
 
 
 
 def add_slice():
-    slice = Solver(name='slice', user_id=1)
+    slice = Solver(
+        name='slice', 
+        user_id=1,
+        api_key="fe6431e4220cc1e68e08b85d390e94c8"
+        )
     db.session.add(slice)
     db.session.commit()
 
@@ -36,11 +44,9 @@ def add_me():
     me.set_password('test_password')
     db.session.add(me)
     db.session.commit()
-    regex_solver = add_regex()
-    api_key = regex_solver.make_api_key()
-    return api_key
-
-
+    add_regex()
+    
+    
 @dataclass
 class ExampleGame:
     solver_id: int

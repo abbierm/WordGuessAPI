@@ -12,7 +12,7 @@ from words.correct import correct_words
 
 # This is API key used for testing 
 # and will not work in production
-API_KEY = 'ffcd6d31e2cb988b1cc631a3095cc2ba'
+API_KEY = '987a17e0add886d85f7f465e7cb3fde1'
 USER_ID = 1
 START_URL = 'http://127.0.0.1:5000/api/start'
 GUESS_URL = 'http://127.0.0.1:5000/api/guess'

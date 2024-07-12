@@ -68,7 +68,7 @@ body {
 }
 
 
-/* Account Settings */
+/* Account  */
 
 .page-container {
     max-width: 1200px;
@@ -76,11 +76,36 @@ body {
     padding: 0 16px;
 }
 
-.page-title {
-    border-bottom: 1px solid #5c5e60;
-    width: 100%;
+.account-heading {
+    font-weight: bold;
+    color: #17614a;
 }
 
+.basic-info-container {
+    margin: 10px;
+    text-align: start;
+}
+
+.account-table {
+    border-collapse: collapse;
+    border: none;
+    max-width: 100%;
+}
+
+.account-table-heading {
+    border: none;
+    min-width: fit-content;
+    padding: 10px;
+    text-align: left;
+    background-color: none;
+}
+
+.account-table-item {
+    border: node;
+    min-width: fit-content;
+    padding: 10px 14px;
+    text-align: left;
+}
 
 /* index */
 .intro {
@@ -264,7 +289,7 @@ table {
     max-width: 100%;
 }
 
-th {
+.solver-heading {
     border-bottom: 1px solid #ddd;
     border-right: 1px solid #ddd;
     min-width: fit-content;
@@ -272,7 +297,7 @@ th {
     padding: 10px;
 }
 
-td {
+.solver-table-item {
     border-bottom: 1px solid #ddd;
     min-width: fit-content;
     padding: 5px;
