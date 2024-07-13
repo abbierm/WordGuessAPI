@@ -5,7 +5,6 @@ entire email/forget password confirmation loop
 """
 import pytest
 from app import mail
-from pprint import pprint
 from flask_mailman import EmailMessage
 
 
