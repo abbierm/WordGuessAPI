@@ -118,6 +118,8 @@ def account():
 @bp.route('/register_solver', methods=["GET", "POST"])
 @login_required
 def register_solver():
+    if current_user.confirmed == False:
+        return redirect(url_for('main.index'))
     form = RegisterSolver()
     if form.validate_on_submit():
         user_id = current_user.id

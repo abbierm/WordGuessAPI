@@ -1,14 +1,15 @@
-from flask import render_template, redirect, url_for, request, flash
+from flask import render_template, redirect, url_for, request, flash, g
 from app.main import bp
 from flask_login import current_user, login_required
 import sqlalchemy as sa
 from app import db
 from app.models import User, Solver, Game
+from pprint import pprint
 
 
 @bp.route('/', methods=["GET"])
 def index():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated:   
         return redirect(url_for('main.user', username=current_user.username))
     else:
         return render_template('index.html')
@@ -19,13 +20,11 @@ def documentation():
     return render_template("/documentation.html")
 
 
+
 @bp.route('/user/<username>', methods=["GET"])
 @login_required
 def user(username):
-    user = db.session.scalar(sa.select(User).where(User.username == username))
-    if not user:
-        return redirect(url_for('main.index'))
-    
+    user = db.session.scalar(db.select(User).where(User.username == username))
     solvers = db.session.scalars(sa.select(Solver).where(Solver.user_id==user.id))
     return render_template('/user.html', user=user, solvers=list(solvers))
 
