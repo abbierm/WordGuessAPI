@@ -10,7 +10,7 @@ login.login_view = 'auth.login'
 login.login_message = 'Please log in to view this page!'
 mail = Mail()
 
-CONFIRMATION_MESSAGE = 'Please check your email for a confirmation email!  Before using the WordGuessAPI your account must be confirmed!'
+CONFIRMATION = 'Please check your email for a confirmation link!  Before using the WordGuessAPI your account/email must be confirmed!'
 
 
 def create_app(config_class=Config):
@@ -36,8 +36,10 @@ def create_app(config_class=Config):
     @app.before_request
     def remind_confirmation():
         print(session.get("_flashes", []))
-        if current_user.is_authenticated and not current_user.confirmed and not ('message', CONFIRMATION_MESSAGE) in session.get("_flashes", []):
-            flash(CONFIRMATION_MESSAGE)
+        if current_user.is_authenticated and not \
+                current_user.confirmed and not \
+                ('message', CONFIRMATION) in session.get("_flashes", []):
+            flash(CONFIRMATION)
             
     return app
 
