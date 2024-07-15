@@ -25,6 +25,8 @@ def documentation():
 @login_required
 def user(username):
     user = db.session.scalar(db.select(User).where(User.username == username))
+    if not user.confirmed:
+        flash('In order for you to use the WordGuessAPI you must confirm your account by clicking on the link sent via email. If you need another link, go to the account page and select "Resend Confirmation"')
     solvers = db.session.scalars(sa.select(Solver).where(Solver.user_id==user.id))
     return render_template('/user.html', user=user, solvers=list(solvers))
 
