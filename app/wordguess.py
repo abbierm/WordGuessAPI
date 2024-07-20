@@ -45,30 +45,34 @@ def _feedback(correct_word, guess):
     return ''.join(feedback_list)
 
 
-def create_game(solver_id: int) -> dict:
+def create_game(user_id: int, solver_id: int) -> dict:
     new_word = _choose_word()
-    
     new_game = Game(
+        user_id = user_id,
         solver_id = solver_id,
         correct_word = new_word
         )
     db.session.add(new_game)
     db.session.commit()
-    new_game.get_token()
-    payload = new_game.create_payload()
+    new_game.get_game_token()
+    payload = new_game.to_dict(include_correct=False, include_feedback=False)
     return payload
 
 
 def game_loop(game_id, guess:str):
     user_game = db.session.scalar(sa.select(Game).where(Game.id == game_id))
     if _validate_guess(guess) == False:
-        return user_game.create_payload(message='Word not found in our dictionary.')
+        return user_game.to_dict(
+                                include_feedback=False,
+                                include_correct=False,
+                                message='Word not found in our dictionary.'
+                            )
     feedback = _feedback(user_game.correct_word, guess)
     user_game.update_game(guess, feedback)
     if user_game.status == False:
-        solver = db.session.scalar(sa.select(Solver).where(Solver.id == user_game.solver_id))
+        solver = db.session.scalar(sa.select(Solver).where(Solver.id ==       
+                                                        user_game.solver_id))
         solver.update_stats(user_game.results, user_game.guess_count)
-        return user_game.create_payload(
-                include_correct=True, include_feedback=True)
-    return user_game.create_payload(include_feedback=True)
+        return user_game.to_dict(include_correct=True, include_feedback=True)
+    return user_game.to_dict(include_correct=False, include_feedback=True)
     

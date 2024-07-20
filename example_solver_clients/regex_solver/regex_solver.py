@@ -1,7 +1,3 @@
-from datetime import datetime, date
-import logging
-import os
-from pathlib import Path
 from pydantic import BaseModel
 import random
 import re
@@ -9,30 +5,16 @@ import requests
 import sys
 from typing import Dict, Optional
 from words.correct import correct_words
+from requests.auth import HTTPBasicAuth
 
 # This is API key used for testing 
 # and will not work in production
-API_KEY = '987a17e0add886d85f7f465e7cb3fde1'
-USER_ID = 1
+SOLVER_ID = 'd8297cca990daf3f0e8b031ccd02c02a'
 START_URL = 'http://127.0.0.1:5000/api/start'
 GUESS_URL = 'http://127.0.0.1:5000/api/guess'
+TOKEN_URL = 'http://127.0.0.1:5000/api/tokens'
+BASIC_AUTH = HTTPBasicAuth("devUser", "test_password")
 
-
-#========================================================
-#    Logging
-#========================================================
-THIS_DIRECTORY = os.path.dirname(__file__)
-log_directory = Path(THIS_DIRECTORY, 'logs')
-if not os.path.exists(log_directory):
-    os.makedirs(log_directory)
-file_name = f'game_logs{date.today().strftime("%m-%d")}.log'
-new_log_path = Path(log_directory, file_name)
-logger = logging.getLogger("regex_solver")
-handler = logging.FileHandler(new_log_path)
-format = logging.Formatter("%(asctime)s: %(message)s")
-handler.setFormatter(format)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
 
 
 #=======================================================
@@ -43,25 +25,12 @@ class GuessFeedback(BaseModel):
     feedback: str
 
 class GameData(BaseModel):
-    game_id: int
-    token: str
-    token_expiration: datetime = None
-    solver_id: int
+    game_token: int
     solver_name: str
     status: bool = True
     guess_count: int
-    
-    """
-    Guesses are nested dictionaries where the key represents the 
-    guess number and the dictionary contains the guess and feedback for that guess number. 
-
-    {   1: 
-            {"guess": 'hello', "feedback": 'feedback'},
-        2: 
-            {"guess": 'hello', "feedback": 'feedback'},
-        ...
-    }
-    """
+    status: bool = True
+    guess_count: int
     guesses: Optional[Dict[int, GuessFeedback]] = None
     correct_word: str
     message: str
@@ -69,8 +38,7 @@ class GameData(BaseModel):
     
     
 class Guess(BaseModel):
-    game_id: int
-    token: str
+    game_token: str
     guess: str
     
 
@@ -81,12 +49,10 @@ class RegexSolver:
     def __init__(self, username: str):
         self.username = username
         self.rounds: int = None
-        self.user_id = USER_ID
-        self.api_key = API_KEY
+        self.api_token = None
 
         # API 
         self.token: Optional[str] = None
-        self.game_id: str = None
         self.status: bool = True
 
         # Helpers to pick next word
@@ -251,6 +217,10 @@ class RegexSolver:
 #==========================================================================
 #    api 
 #==========================================================================
+    # TODO: request token
+
+    # TODO: create header
+    
     def _unload_starting_payload(self, payload: GameData):
         self.token = payload.token
         self.game_id = payload.game_id
@@ -289,8 +259,8 @@ class RegexSolver:
             x = r.json()
             payload = GameData(**x)
             return payload
-        except(requests.JSONDecodeError):
-            logger.warning("Payload Error From Guess: %s", r.text)
+        except requests.JSONDecodeError as e:
+            print(e)
             sys.exit()
 
 
@@ -306,11 +276,7 @@ class RegexSolver:
             self.losses += 1
         
 
-    def _calculate_session_stats(self):
-        logger.info("Wins: %i, Total Played %i", self.wins, self.total_played)
-        self.average_wins = round(((self.wins / self.total_played) * 100), 2)
-        self.average_guesses = round((self.total_guesses / self.wins), 2)
-        logger.info("Average Wins: %2f, Average Guesses: %2f", self.average_wins, self.average_guesses)
+
 #==========================================================================
 #    Gameplay loop
 #==========================================================================
@@ -328,23 +294,31 @@ class RegexSolver:
     def play(self, rounds: int):
         self.rounds = rounds
         count = 1
-        logger.info("Starting Regex-Solver session")      
+
+        # Request Token
+        try:
+            token_request = requests.post(url=TOKEN_URL, auth=BASIC_AUTH)
+            self.token = token_request.json()["token"]
+        except requests.JSONDecodeError as e:
+            print(e)
+            sys.exit()
+
+
+             
         # Gameplay Loop
         while count <= self.rounds:
-            logger.info("Round: %i", count)
             self._populate_words()
             self._reset_helpers()
             self._play_round()
             self.update_single_stats()
             count += 1
-        self._calculate_session_stats()
 
 
 #==========================================================================
 # Main Program Loop
 #==========================================================================
 def main():
-    solver_instance = RegexSolver(username='v8-dev')
+    solver_instance = RegexSolver(username='devUser')
     solver_instance.play(1000)
 
 if __name__ == "__main__":

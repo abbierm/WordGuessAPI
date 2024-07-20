@@ -9,24 +9,61 @@ from typing import Optional, List
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
-from flask import current_app
+from flask import current_app, url_for
 
+
+class PaginatedAPIMixin(object):
+    """
+    Used for sending game lookup queries via an api request,
+    This is a generic way that allows me do do this with other
+    models as well if I have a need for it sometime in the future. 
+
+    Code via The Flask Mega-Tutorial by Miguel Grinberg
+    """
+    @staticmethod
+    def to_collection_dict(query, page, per_page, endpoint, **kwargs):
+        resources = db.paginate(query, page=page, per_page=per_page,
+                                error_out=False)
+        data = {
+            'items': [item.to_dict() for item in resources.items],
+            '_meta': {
+                'page': page,
+                'per_page': per_page,
+                'total_pages': resources.pages,
+                'total_items': resources.total
+            },
+            # Allows me to send games via api-links so I don't
+            # send all of the data in one huge packet
+            '_links': {
+                'self': url_for(endpoint, page=page, per_page=per_page,    
+                                **kwargs),
+                'next': url_for(endpoint, page=page+1, per_page=per_page,
+                                **kwargs) if resources.has_next else None,
+                'prev': url_for(endpoint, page=page-1, per_page=per_page,
+                                **kwargs) if resources.has_prev else None
+            }
+        }
+        return data
 
 
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True,
-                                             unique=True)
+                                            unique=True)
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
     confirmed: so.Mapped[bool] = so.mapped_column(sa.Boolean(), default=False)
     solvers: so.Mapped[List['Solver']] = so.relationship(
-                                        lazy="joined", cascade='all, delete-orphan', passive_deletes=True)
+            lazy="joined", cascade='all, delete-orphan', passive_deletes=True)
+    games: so.Mapped[List['Game']] = so.relationship(
+            lazy="joined", cascade='all, delete-orphan', passive_deletes=True)
+    token: so.Mapped[Optional[str]] = so.mapped_column(
+                                        sa.String(32), index=True, unique=True)
+    token_expiration: so.Mapped[Optional[datetime]]
    
     #================================================================
-    # API user lookup
+    # API 
     #================================================================
-    
     def to_dict(self):
         payload = {
             "id": self.id,
@@ -35,11 +72,32 @@ class User(UserMixin, db.Model):
             "solvers": [solver.name for solver in self.solvers]
         }
         return payload
-    
+
+    def get_api_token(self, expires_in=3600):
+        now = datetime.now(timezone.utc)
+        if self.token and self.token_expiration.replace(
+                tzinfo=timezone.utc) > now + timedelta(seconds=60):
+            return self.token
+        self.token = secrets.token_hex(16)
+        self.token_expiration = now + timedelta(seconds=expires_in)
+        db.session.add(self)
+        return self.token
+
+    def revoke_token(self):
+        self.token_expiration = datetime.now(timezone.utc) - timedelta(
+            seconds=1)
+
+    @staticmethod
+    def check_token(token):
+        user = db.session.scalar(sa.select(User).where(User.token == token))
+        if user is None or user.token_expiration.replace(
+                tzinfo=timezone.utc) < datetime.now(timezone.utc):
+            return None
+        return user
+
     #================================================================
     # Password setting / hashing / resetting 
     #================================================================
-
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -64,7 +122,6 @@ class User(UserMixin, db.Model):
     #================================================================
     # Account Confirmation Token
     #================================================================
-
     def generate_confirmation_token(self, expires_in=600):
         return jwt.encode(
             {'confirm_email': self.id, 'exp': time() + expires_in},
@@ -79,9 +136,8 @@ class User(UserMixin, db.Model):
         return db.session.get(User, id)
 
     #================================================================
-    # Registration safeguards 
+    # Registration safeguards -- Ensures no duplicates
     #================================================================
-
     @staticmethod
     def check_duplicate_username(new_username: str) -> bool:
         """Returns true if there is already an account associated with new_username"""
@@ -122,7 +178,7 @@ class Solver(db.Model):
     max_streak: so.Mapped[int] = so.mapped_column(default=0)
     games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver',
                             cascade='all, delete-orphan', passive_deletes=True)
-    api_key: so.Mapped[Optional[str]] = so.mapped_column(
+    api_id: so.Mapped[Optional[str]] = so.mapped_column(
                                     sa.String(32), index=True, unique=True, nullable=True, default=None)
     
 
@@ -131,53 +187,46 @@ class Solver(db.Model):
     #================================================================
     def to_dict(self):
         payload = {
-            "id": self.id,
+            "id": self.api_id,
             "name": self.name,
-            "user_id": self.user_id,
             "words_played": self.words_played,
             "words_won": self.words_won,
             "avg_guesses": self.avg_guesses,
             "avg_won": self.avg,
-            "max_streak": self.max_streak,
-            "api_key": self.api_key
+            "max_streak": self.max_streak
         }
         return payload
     
-    def make_api_key(self) -> str:
-        self.api_key = secrets.token_hex(16)
+    def make_api_id(self) -> str:
+        self.api_id = secrets.token_hex(16)
         db.session.add(self)
         db.session.commit()
         return
     
     @staticmethod
-    def check_key(key):
-        solver = db.session.scalar(sa.select(Solver).where(Solver.api_key == key))
+    def check_api_id(key):
+        solver = db.session.scalar(sa.select(Solver).where(Solver.api_id == key))
         return solver
     
     @staticmethod
-    def get_solver(api_key: str):
+    def get_solver(api_id: str):
         """Returns solver instance or None"""
-        return db.session.scalar(sa.select(Solver).where(Solver.api_key == api_key))
+        return db.session.scalar(sa.select(Solver).where(Solver.api_id == api_id))
     
     @staticmethod
     def validate_user_solver(username, solver_name) -> bool:
-        user = db.session.scalar(sa.select(User).where(
-                                        User.username == username))
-        solver = db.session.scalar(sa.select(Solver).where(
-                                        Solver.name == solver_name))
-                                        
-        if solver is None or user is None:
+        user = db.session.scalar(
+                        sa.select(User).where(User.username == username))
+        solver = db.session.scalar(
+                        sa.select(Solver).where(Solver.name == solver_name))
+        if solver is None or user is None or user.id != solver.user_id:
             return False
-        elif user.id != solver.user_id:
-            return False
-        else:
-            return True
+        return True
         
 
     #================================================================
     # Solver Gameplay Stat Functions 
     #================================================================
-   
     def calculate_avg_guesses(self, guess_count: int) -> float:
         """Calculates the avg number of guesses only in winning games."""
         if self.avg_guesses == None:
@@ -224,11 +273,17 @@ class Solver(db.Model):
            return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == True))
 
     def _update_stats(self):
-        """
-        Recalculates its stats based on all of the games played.
-        """
-        games_played = db.session.scalar(sa.select(func.count(Game.id)).where(Game.solver_id == self.id))
-        games_won = db.session.scalar(sa.select(func.count(Game.id)).where(and_(Game.solver_id == self.id, Game.results == True)))
+        # Recalculates its stats based on all of the games played.
+        games_played = db.session.scalar(
+                        sa.select(
+                        func.count(Game.id)).where(
+                        Game.solver_id == self.id)
+                    )
+        games_won = db.session.scalar(
+                        sa.select(
+                        func.count(Game.id)).where(
+                        and_(Game.solver_id == self.id, Game.results == True))
+                    )
         self.words_played = games_played
         self.words_won = games_won
         self.calculate_avg_guesses
@@ -239,11 +294,13 @@ class Solver(db.Model):
 #==============================================================================
 # Game Table
 #==============================================================================
-class Game(db.Model):
+class Game(PaginatedAPIMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     solver_id: so.Mapped[int] = so.mapped_column(
-                                        sa.ForeignKey(Solver.id),index=True)
-    token: so.Mapped[Optional[str]] = so.mapped_column(
+                                    sa.ForeignKey(Solver.id),index=True)
+    user_id: so.Mapped[int] = so.mapped_column(
+                                    sa.ForeignKey(User.id), index=True)
+    game_token: so.Mapped[Optional[str]] = so.mapped_column(
                                         sa.String(32),index=True, unique=True, default=None)
     token_expiration: so.Mapped[Optional[datetime]]
     timestamp: so.Mapped[datetime] = so.mapped_column(index=True, 
@@ -259,29 +316,26 @@ class Game(db.Model):
     results: so.Mapped[Optional[bool]] = so.mapped_column(default=None)
 
 
-    def get_token(self, expires_in=36000):
-        """
-        Referenced Miguel Grinberg's Flask Mega-Tutorial 
-        to help create this get_token and check_token functions. 
-        """
+    def get_game_token(self, expires_in=36000):
         now = datetime.now(timezone.utc)
-        if self.token and self.token_expiration.replace(
+        if self.game_token and self.token_expiration.replace(
                 tzinfo=timezone.utc) > now + timedelta(seconds=60):
             return self.token
-        self.token = secrets.token_hex(16)
+        self.game_token = secrets.token_hex(16)
         self.token_expiration = now + timedelta(seconds=expires_in)
         db.session.add(self)
         db.session.commit()
 
     @staticmethod
-    def check_token(token):
-        user_game = db.session.scalar(sa.select(Game).where(Game.token == token))
+    def check_game_token(game_token):
+        user_game = db.session.scalar(sa.select(Game).where(
+            Game.game_token == game_token))
         if user_game is None:
-            return False
+            return None
         if user_game.token_expiration.replace(
                             tzinfo=timezone.utc) < datetime.now(timezone.utc):
-            return False
-        return True
+            return None
+        return user_game
     
     def update_game(self, guess, feedback):
         self.guess_count += 1
@@ -300,16 +354,14 @@ class Game(db.Model):
         db.session.add(self)
         db.session.commit()
                 
-    def create_payload(
+    def to_dict(
         self, 
-        include_correct=False, 
-        include_feedback=False, 
+        include_correct=True, 
+        include_feedback=True, 
         message=None
     ):
         payload = {
-            'game_id': self.id,
-            'token': self.token,
-            'solver_id': self.solver_id,
+            'game_token': self.game_token,
             'solver_name': self.solver.name,
             'status': self.status,
             'guess_count': self.guess_count,

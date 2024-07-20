@@ -15,7 +15,7 @@ def add_regex():
     regex = Solver(
         name='regex', 
         user_id=1,
-        api_key='987a17e0add886d85f7f465e7cb3fde1'
+        api_id="d8297cca990daf3f0e8b031ccd02c02a"
     )
     db.session.add(regex)
     db.session.commit()
@@ -27,7 +27,7 @@ def add_slice():
     slice = Solver(
         name='slice', 
         user_id=1,
-        api_key="fe6431e4220cc1e68e08b85d390e94c8"
+        api_id="d8297cca990daf3f0e8b031ccd02c02b"
         )
     db.session.add(slice)
     db.session.commit()

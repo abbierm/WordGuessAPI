@@ -20,7 +20,6 @@ def documentation():
     return render_template("/documentation.html")
 
 
-
 @bp.route('/user/<username>', methods=["GET"])
 @login_required
 def user(username):
@@ -87,12 +86,12 @@ def solver(solver_name, filter=None):
             prev_url=prev_url, next_url=next_url, games=games)
     
         
-@bp.route('/create_api_key', methods=["POST"])
+@bp.route('/create_api_id', methods=["POST"])
 @login_required
 def create_new_key():
     if request.method == "POST" and current_user.is_authenticated:
         solver_id = request.form.get("solver")
         solver = db.session.scalar(sa.select(Solver).where(Solver.id == solver_id))
-        solver.make_api_key()
+        solver.make_api_id()
         return redirect(url_for('main.solver', solver_name=solver.name))
     
