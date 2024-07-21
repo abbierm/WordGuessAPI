@@ -6,16 +6,11 @@ import sys
 from typing import Dict, Optional
 from words.correct import correct_words
 from requests.auth import HTTPBasicAuth
+import keyring
 
-# This is API key used for testing 
-# and will not work in production
-SOLVER_ID = 'd8297cca990daf3f0e8b031ccd02c02a'
 START_URL = 'http://127.0.0.1:5000/api/start'
 GUESS_URL = 'http://127.0.0.1:5000/api/guess'
 TOKEN_URL = 'http://127.0.0.1:5000/api/tokens'
-BASIC_AUTH = HTTPBasicAuth("devUser", "test_password")
-
-
 
 #=======================================================
 #    Pydantic Models
@@ -25,7 +20,7 @@ class GuessFeedback(BaseModel):
     feedback: str
 
 class GameData(BaseModel):
-    game_token: int
+    game_token: str
     solver_name: str
     status: bool = True
     guess_count: int
@@ -42,22 +37,32 @@ class Guess(BaseModel):
     guess: str
     
 
-#==========================================================================
+#===============================================================
 #    Regex Solver Class
-#==========================================================================
+#===============================================================
 class RegexSolver:
     def __init__(self, username: str):
         self.username = username
         self.rounds: int = None
-        self.api_token = None
+        self.api_password = keyring.get_password("regex", self.username)
+        self.solver_id = keyring.get_password("solver_id", self.username)
 
         # API 
-        self.token: Optional[str] = None
+        self.api_token = None
+        self.game_token = None
         self.status: bool = True
+        self.current_guess = None
+        self.token_header = {
+            "Authorization": None
+            }
+        self.start_payload = {
+            "solver_id": self.solver_id 
+        }
+        self.guess_payload = {}
+
 
         # Helpers to pick next word
         self.words = None
-        self.current_guess = None
         self.guess_count = 0
         self.feedback: None
         self.all_yellow = []
@@ -77,9 +82,9 @@ class RegexSolver:
         self.total_guesses: int = 0
 
 
-#==========================================================================
+#===============================================================
 #    Resets for each new game
-#==========================================================================
+#===============================================================
     def _populate_words(self):
         self.words = set(correct_words[:])
 
@@ -97,12 +102,12 @@ class RegexSolver:
         self.current_result = None
         
     
-#==========================================================================
+#===============================================================
 #    Uses Feedback to pick the next word
-#==========================================================================
+#===============================================================
     def _parse_regex_pattern(self, letter: str, index: int, valid=True):
         """
-        Inserts new letter's pattern into the exsisting word. 
+        Inserts new letter's pattern into the existing word. 
         
         valid = "({letter})? | "
         invalid = "[^other letters{letter}]        
@@ -168,7 +173,6 @@ class RegexSolver:
         # adding '\\w' to the spots with any integers
         the_end_pattern = ['\\w' if isinstance(thing, int) == True else thing for thing in self.regex_pattern_list]
         self.regex_pattern = ''.join(the_end_pattern)
-        logger.debug("New Pattern: %s from feedback: %s", self.regex_pattern, self.feedback)
         
 
     def _filter_words(self):
@@ -178,7 +182,7 @@ class RegexSolver:
           
     def _pick_best_first_word(self) -> str:
         # "Good" first wordle word choices?
-        the_best_list = ['aisle', 'anime', 'ghost', 'roast', 'resin', 'tares', 'soare', 'raise', 'seare', 'roate']
+        the_best_list = ['aisle', 'anime', 'ghost', 'roast', 'resin', 'tares', 'soare', 'raise', 'seare', 'crate']
         return random.choice(the_best_list)
 
 
@@ -202,7 +206,7 @@ class RegexSolver:
         self.grey_letters = [0, 1, 2, 3, 4]
 
 
-    def pick_next_word(self):
+    def _pick_next_word(self):
         if self.guess_count == 0:
             self.current_guess = self._pick_best_first_word()
         else:
@@ -214,59 +218,78 @@ class RegexSolver:
                 self.current_guess = self._choose()
          
 
-#==========================================================================
+#==============================================================
 #    api 
-#==========================================================================
-    # TODO: request token
+#==============================================================
+    def _request_token(self):
+        basic_auth = HTTPBasicAuth(
+                self.username, 
+                self.api_password
+            )
+        try:
+            token_request = requests.post(
+                url=TOKEN_URL, auth=basic_auth
+            )
+            self.api_token = token_request.json()["token"]
+            self.token_header['Authorization'] = f"Bearer {self.api_token}"
+        except (requests.JSONDecodeError, KeyError) as e:
+            print(e)
+            sys.exit()
 
-    # TODO: create header
-    
-    def _unload_starting_payload(self, payload: GameData):
-        self.token = payload.token
-        self.game_id = payload.game_id
-    
-
-    def _unload_payload(self, payload: GameData):
+    def _unload_response(self, payload: GameData):
         """
         Updates guess counts, current feedback and reports current status to the game-loop for flow control. 
         """
         self.guess_count = payload.guess_count
         self.guesses = payload.guesses
-        self.feedback = self.guesses[self.guess_count].feedback
+        if self.guess_count != 0:
+            self.feedback = self.guesses[self.guess_count].feedback
+        else:
+            self.game_token = payload.game_token
         self.status = payload.status
         if self.status == False:
-            logger.info("End Of Game Guesses: %s", self.guesses)
             self.current_results = payload.results
+        return
 
 
-    def start(self, url=START_URL) -> GameData:
-        payload = {'solver_api_key': self.api_key, 'user_id': self.user_id}
-        r = requests.post(url=url, json=payload)
+    def start(self):
+        r = requests.post(
+            url=START_URL,
+            headers=self.token_header, 
+            json=self.start_payload
+        )
         try:
             x = r.json()
-            start_payload = GameData(**x)
-            self._unload_starting_payload(start_payload)
-        except (TypeError, requests.JSONDecodeError):
-            logger.info("Starting payload error: %s", r.text)
+            start_response = GameData(**x)
+            self._unload_response(start_response)
+
+        except (TypeError, requests.JSONDecodeError) as e:
+            print(e)
             sys.exit()
     
 
     def guess(self) -> GameData:
-        url = 'http://127.0.0.1:5000/api/guess'
-        payload = {"token": self.token, "game_id": self.game_id, "guess": self.current_guess}
-        r = requests.post(url, json=payload)
+        self.guess_payload = {
+            "game_token": self.game_token,
+            "guess": self.current_guess    
+        }
+        r = requests.post(
+            url=GUESS_URL,
+            json=self.guess_payload,
+            headers=self.token_header
+        )
         try:
             x = r.json()
-            payload = GameData(**x)
-            return payload
+            guess_response = GameData(**x)
+            self._unload_response(guess_response)
         except requests.JSONDecodeError as e:
             print(e)
             sys.exit()
 
 
-#==========================================================================
+#==============================================================
 #    Updates Stats
-#==========================================================================
+#==============================================================
     def update_single_stats(self):
         self.total_played += 1
         if self.current_results == 'won':
@@ -277,16 +300,15 @@ class RegexSolver:
         
 
 
-#==========================================================================
+#==============================================================
 #    Gameplay loop
-#==========================================================================
+#===============================================================
     def _play_round(self):
         self.start()
         while self.guess_count < 6:
             self._reset_lists()
-            self.pick_next_word()
-            payload = self.guess()
-            self._unload_payload(payload)
+            self._pick_next_word()
+            self.guess()
             if self.status == False:
                 return
 
@@ -294,17 +316,9 @@ class RegexSolver:
     def play(self, rounds: int):
         self.rounds = rounds
         count = 1
-
         # Request Token
-        try:
-            token_request = requests.post(url=TOKEN_URL, auth=BASIC_AUTH)
-            self.token = token_request.json()["token"]
-        except requests.JSONDecodeError as e:
-            print(e)
-            sys.exit()
+        self._request_token()
 
-
-             
         # Gameplay Loop
         while count <= self.rounds:
             self._populate_words()
@@ -314,9 +328,9 @@ class RegexSolver:
             count += 1
 
 
-#==========================================================================
+#===============================================================
 # Main Program Loop
-#==========================================================================
+#===============================================================
 def main():
     solver_instance = RegexSolver(username='devUser')
     solver_instance.play(1000)

@@ -9,7 +9,6 @@ from app.wordguess import create_game, game_loop
 from flask import request
 import sqlalchemy as sa
 from pydantic import BaseModel, ValidationError, ConfigDict
-from flask import jsonify
 
 
 class Start(BaseModel):
@@ -22,9 +21,9 @@ class Guess(BaseModel):
     guess: str
 
 
-#====================================================================
+#===============================================================
 # Gameplay routes
-#====================================================================
+#===============================================================
 @bp.route('/start', methods=["POST"])
 @token_auth.login_required
 def start_game():
