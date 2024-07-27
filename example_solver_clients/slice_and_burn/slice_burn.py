@@ -7,11 +7,13 @@ from datetime import date
 import logging
 import os
 from pathlib import Path
-from requests import get, post, JSONDecodeError
+import requests
+from requests import post, JSONDecodeError
+from requests.auth import HTTPBasicAuth
 from words.correct import correct_words
 import sys
 from typing import Optional
-#from decorators import add_logger
+import keyring
 
 
 URL = 'http://127.0.0.1:5000/'
@@ -40,9 +42,19 @@ logger.setLevel(logging.DEBUG)
 # =========================================================================
 class SliceBurn:
     def __init__(self):
-        self.username = 'v8-dev'
-        self.user_id = 1
-        self.solvername = 'sliceAndBurn'
+        self.username = 'devUser'
+        self.app_password = keyring.get_password(
+            "wordguess_password", 
+            "devUser"
+        )
+        self.solver_id = keyring.get_password(
+            "api_id",
+            "slice"
+        )
+        self.token: str = None
+        self.header = {
+            "Authorization": None
+        }
         self.rounds: int = None
         self.current_round = 0
         self.words: Optional[set] = None
@@ -51,8 +63,7 @@ class SliceBurn:
 
         # Gameplay
         self.playing = True
-        self.token = None
-        self.game_id = None
+        self.game_token = None
         self.guess_count = 0
         self.current_guess: str = None
         self.feedback: str = None
@@ -78,16 +89,15 @@ class SliceBurn:
 # =========================================================================
 # API requests and parsing
 # =========================================================================    
-    def _parse_start_payload(self, json: dict):
-        """Gets game info and adds to instance variables"""
-        self.game_id = json['game_id']
-        self.token = json['token']
-           
 
-    def _parse_guess_payload(self, payload: dict):
-        self.guess_count = int(payload['guess_count'])
-        self.feedback = payload["guesses"][str(self.guess_count)]["feedback"]
-        self.guesses = payload["guesses"]
+    def _unload_response(self, payload: dict):
+        
+        self.guess_count = payload["guess_count"]
+        if self.guess_count == 0:
+            self.game_token = payload["game_token"]
+        else:
+            self.feedback = payload["guesses"][str(self.guess_count)]["feedback"]
+            self.guesses = guesses = payload["guesses"]
         self.playing = payload["status"]
 
         logger.info("Guess # %i, Current Guess: %s, Current Feedback: %s, status %s", self.guess_count, self.current_guess, self.feedback, self.playing)
@@ -97,33 +107,47 @@ class SliceBurn:
             if self.results == 'lost':
                 logger.info("Correct Word: %s", payload["correct_word"])
 
-        
+
+    def _request_token(self):
+        url = URL + 'api/tokens'
+        basic_auth = HTTPBasicAuth(
+            self.username,
+            self.app_password
+        )
+        try:
+            token_request = requests.post(
+                url = url,
+                auth=basic_auth
+            )
+            self.token = token_request.json()["token"]
+            self.header["Authorization"] = f"Bearer {self.token}"
+        except (JSONDecodeError, KeyError) as e:
+            logger.debug("Token Request Error: %s", e)
+            sys.exit()
+
 
     def _start_game(self):
         url = URL + '/api/start'
-        payload = {'solver_api_key': API_KEY, 'user_id': self.user_id}
-        r = post(url=url, json=payload)
+        payload = {"solver_id": self.solver_id}
+        r = post(url=url, json=payload, headers=self.header)
         try:
-            self._parse_start_payload(r.json())
+            self._unload_response(r.json())
         except JSONDecodeError as e:
             logger.warning("Starting game request error: %s", e)
-            print(r.text)
             sys.exit()
 
 
     def _post_guess(self):
         payload = {
-                    "game_id": self.game_id,
-                    "token": self.token,
+                    "game_token": self.game_token,
                     "guess": self.current_guess
-                }
+        }
         url = URL + 'api/guess'
-        r = post(url, json=payload)
+        r = post(url, json=payload, headers=self.header)
         try:
             data = r.json()
-            
-            self._parse_guess_payload(data)
-        except JSONDecodeError as e:
+            self._unload_response(data)
+        except (JSONDecodeError, KeyError ) as e:
             logger.debug("Guess Request Error: %s", e)
             sys.exit()
 
@@ -253,6 +277,7 @@ class SliceBurn:
 # =========================================================================
     def _play_one_game(self):
         """Plays one game (trying to guess one 5 letter word in 5 guesses)"""
+        
         self._start_game()
         while self.playing == True:
             self._pick_word()
@@ -262,6 +287,7 @@ class SliceBurn:
         
     def play(self, rounds: int = 250):
         logger.info("Starting new WordGuess session")
+        self._request_token()
         self.rounds = rounds     
         while self.current_round < rounds:
             self._reset_helpers()
@@ -275,7 +301,7 @@ class SliceBurn:
 # =========================================================================
 def main():
     new_slice_instance = SliceBurn()
-    new_slice_instance.play(500)
+    new_slice_instance.play(1000)
 
 if __name__ == '__main__':
     main()

@@ -237,9 +237,6 @@ class RegexSolver:
             sys.exit()
 
     def _unload_response(self, payload: GameData):
-        """
-        Updates guess counts, current feedback and reports current status to the game-loop for flow control. 
-        """
         self.guess_count = payload.guess_count
         self.guesses = payload.guesses
         if self.guess_count != 0:

@@ -45,6 +45,7 @@ def add_me():
     db.session.add(me)
     db.session.commit()
     add_regex()
+    add_slice()
     
     
 @dataclass
