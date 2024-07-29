@@ -2,13 +2,16 @@
 # plays wordle with python wordle solvers
 
 
-from app import db
+from app import db, game_cache
 from collections import Counter
 from .models import Game, Solver
 from .words.words import words
 from .words.correct import correct_words
 import random
 import sqlalchemy as sa
+from .games import GameNode, create_payload, update_game
+from datetime import datetime, timezone, timedelta
+
 
 
 def _choose_word():
@@ -45,34 +48,65 @@ def _feedback(correct_word, guess):
     return ''.join(feedback_list)
 
 
-def create_game(user_id: int, solver_id: int) -> dict:
-    new_word = _choose_word()
+def _add_game_to_db(game: GameNode) -> None:
     new_game = Game(
-        user_id = user_id,
-        solver_id = solver_id,
-        correct_word = new_word
-        )
+            solver_id=game.solver_id,
+            user_id=game.user_id,
+            guess_count=game.guess_count,
+            guesses=game.guesses,
+            feedback=game.feedback,
+            results=game.results,
+            correct_word=game.correct_word
+    )
     db.session.add(new_game)
+    solver = db.session.scalar(db.select(Solver).where(
+                                            Solver.id == game.solver_id))
+    solver.update_stats(game.results, game.guess_count)
+    db.session.add(solver)
     db.session.commit()
-    new_game.get_game_token()
-    payload = new_game.to_dict(include_correct=False, include_feedback=False)
+    
+    
+def create_game(solver_id: int, solver_name: str, user_id: int) -> dict:
+    new_word = _choose_word()
+    token = game_cache.make_token()
+    new_game = GameNode(
+            game_token=token,
+            token_expiration=datetime.now(timezone.utc) + 
+                timedelta(seconds=36000),
+            solver_name=solver_name,
+            solver_id=solver_id,
+            user_id=user_id,
+            correct_word=new_word,
+            guess_count=0,
+        )
+    game_cache.put(new_game)
+    payload = create_payload(
+            game=new_game,
+            include_feedback=False,
+            include_correct=False
+    )
     return payload
 
 
-def game_loop(game_id, guess:str):
-    user_game = db.session.scalar(sa.select(Game).where(Game.id == game_id))
+def game_loop(game, guess:str): 
     if _validate_guess(guess) == False:
-        return user_game.to_dict(
-                                include_feedback=False,
-                                include_correct=False,
-                                message='Word not found in our dictionary.'
-                            )
-    feedback = _feedback(user_game.correct_word, guess)
-    user_game.update_game(guess, feedback)
-    if user_game.status == False:
-        solver = db.session.scalar(sa.select(Solver).where(Solver.id ==       
-                                                        user_game.solver_id))
-        solver.update_stats(user_game.results, user_game.guess_count)
-        return user_game.to_dict(include_correct=True, include_feedback=True)
-    return user_game.to_dict(include_correct=False, include_feedback=True)
+        return create_payload(
+                include_feedback=False,
+                include_correct=False,
+                message='Word not found in our dictionary.'
+        )
     
+    feedback = _feedback(game.correct_word, guess)
+    update_game(game, guess, feedback)
+    
+    
+    if game.status == False:
+        _add_game_to_db(game)
+        payload = create_payload(game=game)
+        game_cache.remove(game.game_token)
+        return payload
+    return create_payload(
+            game=game,
+            include_correct=False, 
+            include_feedback=True
+    )

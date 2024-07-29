@@ -1,6 +1,6 @@
 # Lookup routes to see current user and solver stats
 
-from app import db
+from app import db, game_cache
 from app.api import bp
 from app.api.errors import bad_request
 from app.api.auth import token_auth
@@ -44,7 +44,11 @@ def start_game():
         return bad_request("Invalid solver_id.")
 
     # Creates new game in wordguess.py file and returns starting payload
-    starting_game_payload = create_game(user_id=user.id,  solver_id=solver.id)
+    starting_game_payload = create_game(
+            solver_id=solver.id, 
+            solver_name=solver.name, 
+            user_id=solver.user_id
+    )
     return starting_game_payload
     
 
@@ -53,17 +57,16 @@ def start_game():
 def make_guess():
     json_data = request.get_json()
     user = token_auth.current_user()
-
     try:
         guess_data = Guess.model_validate(json_data)
     except ValidationError:
         return bad_request("Invalid guess payload. \
             Form data should be sent in json and only contain the unique game_token and the guess for the game ")
 
-    game = Game.check_game_token(guess_data.game_token)
+    game = game_cache.get(guess_data.game_token)
     if not game or user.id != game.user_id:
         return bad_request("Invalid game_token")
-    return game_loop(game_id=game.id, guess=guess_data.guess)
+    return game_loop(game, guess=guess_data.guess)
 
 
 #====================================================================

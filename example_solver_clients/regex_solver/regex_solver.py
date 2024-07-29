@@ -8,6 +8,7 @@ from words.correct import correct_words
 from requests.auth import HTTPBasicAuth
 import keyring
 
+
 START_URL = 'http://127.0.0.1:5000/api/start'
 GUESS_URL = 'http://127.0.0.1:5000/api/guess'
 TOKEN_URL = 'http://127.0.0.1:5000/api/tokens'
@@ -52,14 +53,9 @@ class RegexSolver:
         self.game_token = None
         self.status: bool = True
         self.current_guess = None
-        self.token_header = {
-            "Authorization": None
-            }
-        self.start_payload = {
-            "solver_id": self.solver_id 
-        }
+        self.token_header = {"Authorization": None}
+        self.start_payload = {"solver_id": self.solver_id}
         self.guess_payload = {}
-
 
         # Helpers to pick next word
         self.words = None
@@ -83,7 +79,7 @@ class RegexSolver:
 
 
 #===============================================================
-#    Resets for each new game
+#    Helpers
 #===============================================================
     def _populate_words(self):
         self.words = set(correct_words[:])
@@ -233,7 +229,7 @@ class RegexSolver:
             self.api_token = token_request.json()["token"]
             self.token_header['Authorization'] = f"Bearer {self.api_token}"
         except (requests.JSONDecodeError, KeyError) as e:
-            print(e)
+            print(f"Request error: {e}")
             sys.exit()
 
     def _unload_response(self, payload: GameData):
@@ -246,6 +242,7 @@ class RegexSolver:
         self.status = payload.status
         if self.status == False:
             self.current_results = payload.results
+        
         return
 
 
@@ -261,7 +258,7 @@ class RegexSolver:
             self._unload_response(start_response)
 
         except (TypeError, requests.JSONDecodeError) as e:
-            print(e)
+            print(f"Stat error: {e}")
             sys.exit()
     
 
@@ -280,7 +277,7 @@ class RegexSolver:
             guess_response = GameData(**x)
             self._unload_response(guess_response)
         except requests.JSONDecodeError as e:
-            print(e)
+            print(f"Guess error: {e}")
             sys.exit()
 
 
@@ -330,7 +327,7 @@ class RegexSolver:
 #===============================================================
 def main():
     solver_instance = RegexSolver(username='devUser')
-    solver_instance.play(1000)
+    solver_instance.play(51)
 
 if __name__ == "__main__":
     main()

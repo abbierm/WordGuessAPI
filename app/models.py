@@ -61,9 +61,6 @@ class User(UserMixin, db.Model):
                                         sa.String(32), index=True, unique=True)
     token_expiration: so.Mapped[Optional[datetime]]
    
-    #================================================================
-    # API 
-    #================================================================
     def to_dict(self):
         payload = {
             "id": self.id,
@@ -95,9 +92,6 @@ class User(UserMixin, db.Model):
             return None
         return user
 
-    #================================================================
-    # Password setting / hashing / resetting 
-    #================================================================
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -119,9 +113,7 @@ class User(UserMixin, db.Model):
             return
         return db.session.get(User, id)
     
-    #================================================================
-    # Account Confirmation Token
-    #================================================================
+
     def generate_confirmation_token(self, expires_in=600):
         return jwt.encode(
             {'confirm_email': self.id, 'exp': time() + expires_in},
@@ -135,9 +127,6 @@ class User(UserMixin, db.Model):
             return
         return db.session.get(User, id)
 
-    #================================================================
-    # Registration safeguards -- Ensures no duplicates
-    #================================================================
     @staticmethod
     def check_duplicate_username(new_username: str) -> bool:
         """Returns true if there is already an account associated with new_username"""
@@ -160,10 +149,6 @@ def load_user(id):
     return db.session.get(User, int(id))
 
 
-
-#==============================================================================
-# Solver 
-#==============================================================================
 class Solver(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True)
@@ -181,10 +166,6 @@ class Solver(db.Model):
     api_id: so.Mapped[Optional[str]] = so.mapped_column(
                                     sa.String(32), index=True, unique=True, nullable=True, default=None)
     
-
-    #================================================================
-    # API 
-    #================================================================
     def to_dict(self):
         payload = {
             "id": self.api_id,
@@ -223,10 +204,6 @@ class Solver(db.Model):
             return False
         return True
         
-
-    #================================================================
-    # Solver Gameplay Stat Functions 
-    #================================================================
     def calculate_avg_guesses(self, guess_count: int) -> float:
         """Calculates the avg number of guesses only in winning games."""
         if self.avg_guesses == None:
@@ -248,8 +225,6 @@ class Solver(db.Model):
         self.avg = round(((self.words_won / self.words_played) * 100), 2)
         if won == True:
             self.avg_guesses = self.calculate_avg_guesses(guess_count)
-        db.session.add(self)
-        db.session.commit()
 
     def reset_games(self):
         """Deletes all of the games for this solver and updates their stats"""
@@ -278,12 +253,12 @@ class Solver(db.Model):
                         sa.select(
                         func.count(Game.id)).where(
                         Game.solver_id == self.id)
-                    )
+        )
         games_won = db.session.scalar(
                         sa.select(
                         func.count(Game.id)).where(
                         and_(Game.solver_id == self.id, Game.results == True))
-                    )
+        )
         self.words_played = games_played
         self.words_won = games_won
         self.calculate_avg_guesses
@@ -291,18 +266,12 @@ class Solver(db.Model):
         db.session.commit()
 
 
-#==============================================================================
-# Game Table
-#==============================================================================
 class Game(PaginatedAPIMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     solver_id: so.Mapped[int] = so.mapped_column(
                                     sa.ForeignKey(Solver.id),index=True)
     user_id: so.Mapped[int] = so.mapped_column(
                                     sa.ForeignKey(User.id), index=True)
-    game_token: so.Mapped[Optional[str]] = so.mapped_column(
-                                        sa.String(32),index=True, unique=True, default=None)
-    token_expiration: so.Mapped[Optional[datetime]]
     timestamp: so.Mapped[datetime] = so.mapped_column(index=True, 
                                     default=lambda: datetime.now(timezone.utc))
     solver: so.Mapped[Solver] = so.relationship(back_populates='games')
@@ -310,80 +279,6 @@ class Game(PaginatedAPIMixin, db.Model):
     guess_count: so.Mapped[int] = so.mapped_column(default=0)
     guesses: so.Mapped[Optional[str]] = so.mapped_column(sa.String(40), default='')
     feedback: so.Mapped[Optional[str]] = so.mapped_column(sa.String(40), default='')
-    # True is active, false is inactive
-    status: so.Mapped[bool] = so.mapped_column(default=True)
     # True is won, False is Lost
     results: so.Mapped[Optional[bool]] = so.mapped_column(default=None)
-
-
-    def get_game_token(self, expires_in=36000):
-        now = datetime.now(timezone.utc)
-        if self.game_token and self.token_expiration.replace(
-                tzinfo=timezone.utc) > now + timedelta(seconds=60):
-            return self.token
-        self.game_token = secrets.token_hex(16)
-        self.token_expiration = now + timedelta(seconds=expires_in)
-        db.session.add(self)
-        db.session.commit()
-
-    @staticmethod
-    def check_game_token(game_token):
-        user_game = db.session.scalar(sa.select(Game).where(
-            Game.game_token == game_token))
-        if user_game is None:
-            return None
-        if user_game.token_expiration.replace(
-                            tzinfo=timezone.utc) < datetime.now(timezone.utc):
-            return None
-        return user_game
-    
-    def update_game(self, guess, feedback):
-        self.guess_count += 1
-        if self.guess_count == 1:
-            self.feedback = feedback
-            self.guesses = guess
-        else:
-            self.feedback = "%s, %s" % (self.feedback, feedback)
-            self.guesses = "%s, %s" % (self.guesses, guess)
-        if feedback == "GGGGG":
-            self.status = False
-            self.results = True
-        elif self.guess_count == 6:
-            self.status = False
-            self.results = False
-        db.session.add(self)
-        db.session.commit()
                 
-    def to_dict(
-        self, 
-        include_correct=True, 
-        include_feedback=True, 
-        message=None
-    ):
-        payload = {
-            'game_token': self.game_token,
-            'solver_name': self.solver.name,
-            'status': self.status,
-            'guess_count': self.guess_count,
-            'guesses': {},
-            'correct_word': '*****',
-            'message': 'None',
-            'results': 'None'
-        }
-        if include_feedback == True:
-            guess_list = self.guesses.split(', ')
-            feedback_list = self.feedback.split(', ')
-            feedback_dict = {}
-            for i in range(len(guess_list)):
-                feedback_dict[i + 1] = {"guess": guess_list[i], "feedback": feedback_list[i]}
-            payload["guesses"] = feedback_dict
-        if include_correct == True:
-            payload["correct_word"] = self.correct_word
-            if self.results == True:
-                payload["results"] = 'won'
-            else:
-                payload["results"] = 'lost'
-        if message != None:
-            payload["message"] = message
-        return payload
-
