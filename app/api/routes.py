@@ -53,10 +53,8 @@ def start_game():
     
 
 @bp.route('/guess', methods=['POST'])
-@token_auth.login_required
 def make_guess():
     json_data = request.get_json()
-    user = token_auth.current_user()
     try:
         guess_data = Guess.model_validate(json_data)
     except ValidationError:
@@ -64,8 +62,6 @@ def make_guess():
             Form data should be sent in json and only contain the unique game_token and the guess for the game ")
 
     game = game_cache.get(guess_data.game_token)
-    if not game or user.id != game.user_id:
-        return bad_request("Invalid game_token")
     return game_loop(game, guess=guess_data.guess)
 
 
