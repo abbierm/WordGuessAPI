@@ -4,8 +4,8 @@ from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm, RegisterSolver
 import sqlalchemy as sa
 from app import db
-from app.models import User, Solver
-from .email import send_password_reset_email, send_confirmation_email, send_update_new_email_confirmation
+from app.models import User, Solver, Game
+from .email import send_password_reset_email, send_confirmation_email, send_update_new_email_confirmation, send_delete_account_email
 
 
 @bp.route('/login', methods=["GET", "POST"])
@@ -171,7 +171,7 @@ def change_email_request():
 
 @bp.route('/change_email/<token>', methods=["GET"])
 def change_email(token):
-    user = user.verify_account(token)
+    user = User.verify_account(token)
     if not user:
         flash('Invalid or expired confirmation link.')
     else:
@@ -181,5 +181,29 @@ def change_email(token):
         flash('Your new email has been confirmed!!!')
     return redirect(url_for('main.index'))
     
-    
 
+@bp.route('/delete_account_request', methods=["POST"])
+@login_required
+def delete_account_request():
+    if not current_user.is_authenticated or request.method != "POST":
+        flash('You must be logged it to do that!')
+        return redirect(url_for('main.index'))
+    send_delete_account_email(current_user)
+    flash('A confirmation email to permanently delete your account has been sent. Please check your email and click on the confirmation link to finish deleting your account.')
+    return redirect(url_for('main.index'))
+
+
+@bp.route('/delete_account/<token>', methods=["GET"])
+def delete_account(token):
+    user = User.verify_token(token)
+    if not user:
+        flash('Invalid or expired confirmation link.')
+    else:
+        solvers = db.session.scalars(db.select(Solver).where(Solver.user_id == user.id))
+        for solver in solvers:
+            db.session.execute(sa.delete(Game).where(Game.solver_id == solver.id))
+            db.session.execute(sa.delete(Solver).where(Solver.id == solver.id))
+        db.session.execute(sa.delete(user))
+        db.session.commit()
+        flash('Your account has been deleted from WordGuess')
+        return redirect(url_for('main.index'))

@@ -1,0 +1,13 @@
+Dear {{ user.username }},
+
+You recently requested for your account to be deleted. In order to confirm your request, please click the link below:
+
+{{ url_for('auth.delete_account', token=token, _external=True) }}
+
+Upon deletion all of your solvers, games, and account information will be permanently removed from our database.
+
+If you did not make this request to delete your account, please disregard this message (and possibly change your password)
+
+Sincerely,
+
+The WordGuess Team

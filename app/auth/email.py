@@ -30,4 +30,17 @@ def send_update_new_email_confirmation(user: User):
         sender = 'abbie@wordGuessAPI.com', 
         recipients = [user.email],
         text_body = render_template('email/change_email.txt', 
-                                    user=user, token=token))
+                                    user=user, token=token)
+                    )
+    
+
+def send_delete_account_email(user: User) -> None:
+    token = user.generate_account_deletion_token()
+    send_email(
+        subject = '[WordGuess] Account Deletion Request',
+        sender = 'abbie@wordguessAPI.com',
+        recipients = [user.email],
+        text_body = render_template(
+                    'email/delete_account_confirmation.txt',
+                    user=user, token=token)
+                    )

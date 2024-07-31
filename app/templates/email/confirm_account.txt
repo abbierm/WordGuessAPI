@@ -8,6 +8,6 @@ In order to use our WordGuess API, you must verify your account by clicking on t
 
 If you did not create an account for WordGuess, please disregard this message. 
 
-Sincerly, 
+Sincerely, 
 
-The v8_dev Team
+The WordGuess Team
