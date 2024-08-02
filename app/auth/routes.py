@@ -195,15 +195,16 @@ def delete_account_request():
 
 @bp.route('/delete_account/<token>', methods=["GET"])
 def delete_account(token):
-    user = User.verify_token(token)
+    user = User.verify_account(token)
     if not user:
         flash('Invalid or expired confirmation link.')
+        return redirect(url_for('main.index'))
     else:
         solvers = db.session.scalars(db.select(Solver).where(Solver.user_id == user.id))
         for solver in solvers:
             db.session.execute(sa.delete(Game).where(Game.solver_id == solver.id))
             db.session.execute(sa.delete(Solver).where(Solver.id == solver.id))
-        db.session.execute(sa.delete(user))
+        db.session.execute(sa.delete(User).where(User.id == user.id))
         db.session.commit()
         flash('Your account has been deleted from WordGuess')
         return redirect(url_for('main.index'))
