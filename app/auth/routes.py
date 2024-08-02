@@ -5,7 +5,13 @@ from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm
 import sqlalchemy as sa
 from app import db
 from app.models import User, Solver, Game
-from .email import send_password_reset_email, send_confirmation_email, send_update_new_email_confirmation, send_delete_account_email
+from .email import (
+    send_password_reset_email, 
+    send_confirmation_email, 
+    send_update_new_email_confirmation,
+    send_delete_account_email,
+    send_reset_account_email
+)
 
 
 @bp.route('/login', methods=["GET", "POST"])
@@ -207,4 +213,30 @@ def delete_account(token):
         db.session.execute(sa.delete(User).where(User.id == user.id))
         db.session.commit()
         flash('Your account has been deleted from WordGuess')
+        return redirect(url_for('main.index'))
+
+
+@bp.route('/reset_account_request', methods=["POST"])
+def reset_account_request():
+    if not current_user.is_authenticated or request.method != "POST":
+        flash('You must be logged in to do that!')
+        return redirect(url_for('main.index'))
+    send_reset_account_email(current_user)
+    flash("Please check your email to confirm your account reset request.")
+    return redirect(url_for('main.index'))
+
+
+@bp.route('/reset_account/<token>', methods=["GET"])
+def reset_account(token):
+    user = User.verify_account(token)
+    if not user:
+        flash('Invalid or expired confirmation link. ')
+        return redirect(url_for('main.index'))
+    else:
+        solvers = db.session.scalars(db.select(Solver).where(Solver.user_id == user.id))
+        for solver in solvers:
+            db.session.execute(sa.delete(Game).where(Game.solver_id == solver.id))
+            db.session.execute(sa.delete(Solver).where(Solver.id == solver.id))
+        db.session.commit()
+        flash("Your account has been reset!")
         return redirect(url_for('main.index'))

@@ -67,8 +67,16 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="account-table-item">Resets Account</td>
-                    <td class="account-table-item"># TODO: Reset Account</td>
+                    <td class="account-table-item">Reset Account</td>
+                    <td class="account-table-item">
+                        <form action="{{ url_for('auth.reset_account_request') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset your account? This will permanently delete all of your solvers and their associated games and cannot be undone.');">
+                            <input type="hidden" value="{{ user.id }}">
+                            <div class="tooltip">
+                                <input type="submit" style="background-color: #dd396d" value="Reset Account">
+                                <span class="account-tooltip">Email confirmation is required.</span>
+                            </div>
+                        </form>
+                    </td>
                 </tr>
                 <tr>
                     <td class="account-table-item">Delete Account</td>

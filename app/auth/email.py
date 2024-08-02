@@ -1,6 +1,8 @@
 from flask import render_template, current_app
 from app.email import send_email
 from app.models import User
+import sys
+
 
 
 def send_password_reset_email(user):
@@ -11,7 +13,7 @@ def send_password_reset_email(user):
         recipients = [user.email],
         text_body = render_template('email/reset_password.txt', 
                                     user=user, token=token))
-    
+
 
 def send_confirmation_email(user):
     token = user.generate_confirmation_token()
@@ -43,4 +45,15 @@ def send_delete_account_email(user: User) -> None:
         text_body = render_template(
                     'email/delete_account_confirmation.txt',
                     user=user, token=token)
+                    )
+
+def send_reset_account_email(user: User) -> None:
+    token = user.generate_confirmation_token()
+    send_email(
+        subject = '[WordGuess] Reset Account Request',
+        sender = 'abbie@wordguessAPI.com',
+        recipients = [user.email],
+        text_body = render_template(
+                        'email/reset_account.txt',
+                        user=user, token=token)
                     )
