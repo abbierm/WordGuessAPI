@@ -72,7 +72,16 @@
                 </tr>
                 <tr>
                     <td class="account-table-item">Delete Account</td>
-                    <td class="account-table-item"># TODO: Perm Delete</td>
+                    <td class="account-table-item">
+                        <form action="{{ url_for('auth.delete_account_request') }}" method="POST" onSubmit="return confirm('Are you sure you want to delete your account? This if permanent and cannot be undone.');">
+                            <input type="hidden" value="{{ user.id }}">
+                            <div class="tooltip">
+                                <input type="submit" style="background-color: #dd396d" value="Delete Account">
+                                <span class="account-tooltip">Email confirmation is required.</span>
+                            </div>
+                        </form>
+                      
+                    </td>
                 </tr>
             </table>
         </div>

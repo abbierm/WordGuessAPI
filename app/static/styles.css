@@ -1,8 +1,10 @@
 
 body {
-    /* font-family: Oxygen, monospace, nunito-sans,-apple-system,BlinkMacSystemFont,segoe ui,Roboto,Oxygen-Sans,Ubuntu,Cantarell,helvetica neue,sans-serif; */
     font-family: ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
+    align-content: center;
+    /* font-size: 14px; */
 }
+
 
 
 /* Nav-Bar */
@@ -108,6 +110,40 @@ body {
     text-align: left;
 }
 
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .account-tooltip {
+    font-size: 10px;
+    visibility: hidden;
+    width: 120px;
+    background-color: rgba(99, 116, 112, .25);
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0px;
+    position: absolute;
+    z-index: 1;
+    top: -5px;
+    left: 110%;
+}
+
+.tooltip .account-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent black transparent transparent;
+}
+
+.tooltip:hover .account-tooltip {
+    visibility: visible;
+}
+
 /* index */
 .intro {
     text-align: center;
@@ -126,8 +162,6 @@ body {
     margin: 10px;
     font-weight: bold;
     color: #17614a;
-    font-family: "Oxygen";
-    font-style: normal;
 }
 
 .table-container {
@@ -152,7 +186,7 @@ body {
 .heading {
     background-color: #ececec;
     color: #3e3e3e;
-    font-family: "Oxygen", sans-serif;
+    
     font-weight: 700;
     font-style: normal;
 }
