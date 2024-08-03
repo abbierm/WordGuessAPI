@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from time import time
 import secrets
 import sqlalchemy as sa
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, desc
 import sqlalchemy.orm as so
 from typing import Optional, List
 from flask_login import UserMixin
@@ -241,11 +241,12 @@ class Solver(db.Model):
     def get_games(self, filter=None):
         """Returns a game query not executed"""
         if filter is None or filter != "lost" and filter != "won":
-           return sa.select(Game).where(Game.solver_id == self.id)
+           return sa.select(Game).order_by(desc(Game.id)).where(Game.solver_id == self.id)
         elif filter == "lost":
-           return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == False))
+           return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == False)).order_by(desc(Game.id))
         elif filter == "won":
-           return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == True))
+           return sa.select(Game).where(and_(Game.solver_id == self.id, Game.results == True)).order_by(desc(Game.id))
+
 
     def _update_stats(self):
         # Recalculates its stats based on all of the games played.
