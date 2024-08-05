@@ -58,19 +58,21 @@
     </div>
     
 
-    <div>
+    <div class="games-table">
         <div class="games-table-title-bar">
             <div class="games-table-title">
                 <h2>Games Table</h2>
             </div>
             <div class="games-search-select">
-                <p>Filter Games</p>
+                <!-- <p>Filter Games</p> -->
                 <form  action="{{ url_for('main.solver', solver_name=solver.name) }}" method="GET">
                     <select name="filter" id="filterList">
+                        <option value="options">Filters</option>
                         <option value="lost">Lost Games</option>
                         <option value="won">Won Games</option>
+                        <option value="reset">Reset</option>
                     </select>
-                    <input type="submit" class="reset-button" value="filter">
+                    <input type="submit" class="reset-button" value="select">
                 </form>
             </div>
         </div>

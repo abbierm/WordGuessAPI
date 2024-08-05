@@ -9,8 +9,11 @@ body {
 
 /* Nav-Bar */
 .container {
-    width: 100%;
+    max-width: 100%;
+    max-width: 1200px;
     height: 100%;
+    text-align: center;
+    margin: auto;
 }
 
 .navbar {
@@ -234,7 +237,6 @@ input[type=submit] {
     flex-flow: column nowrap;
     align-items: center;
     border: 1px solid #ddd;
-    /* margin: 0 auto; */
 }
 
 .solver-Rtable-heading {
@@ -284,23 +286,21 @@ input[type=submit] {
 
 
 /* Solver Games Tables */
-.games-table-box {
-    text-align: center;
+.games-table {
+    margin: auto;
 }
-
 .games-table-title-bar {
     display: flex;
     justify-content: space-around;
     text-align: center;
-    margin: 30px;
+    margin: 20px;
     align-items: center;
+    flex-wrap: nowrap;
+    
 }
 
 .games-table-title {
-    font-weight: bold;
     color: #17614a;
-    font-family: "Oxygen";
-    font-style: normal;
 }
 
 .games-search-select {
@@ -308,6 +308,8 @@ input[type=submit] {
     flex-direction: column;
     justify-content: space-between;
 }
+
+
 .games-table-container {
     text-align: center;
     margin: 20px;
