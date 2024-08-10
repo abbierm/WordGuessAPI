@@ -1,9 +1,21 @@
+@font-face {
+    font-family: 'OxygenMono';
+    src: url('assets/OxygenMono-Regular.woff') format('woff'),
+         url('assets/OxygenMono-Regular.woff2') format('woff2'),
+         url('assets/OxygenMono-Regular.tiff')  format('truetype')
+  }
 
 body {
-    font-family: ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
+    /* font-family: ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji"; */
+    font-family: 'OxygenMono';
     align-content: center;
-    /* font-size: 14px; */
 }
+
+.dark-mode {
+    background-color: #1d1f21;
+    color: #dfedff;
+}
+
 
 
 
@@ -42,8 +54,8 @@ body {
 
 .navbar ul li a {
     text-decoration: none;
-    color: black;
     font-weight: 500;
+    color: black;
 }
 
 
@@ -58,6 +70,7 @@ body {
 }
 
 /* Flashbar */
+
 .flashbar {
     list-style-type: none;
     text-align: center;

@@ -5,9 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="initial-scale=1, width=device-width">
         <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@300;400;700&display=swap" rel="stylesheet">
+        <script src="{{ url_for('static', filename='code/main.js') }}"></script>        
         <title>WordGuess: {% block title %}{% endblock %}</title>
        
     </head>
@@ -17,7 +15,9 @@
             <nav class="navbar">
                 <ul>
                     <li><a href="{{ url_for('main.index') }}">WordGuess</a></li>
-                    <li><a href="{{ url_for('main.documentation') }}">Documentation</a></li>
+                    <li>
+                        <a href="{{ url_for('main.documentation') }}">Documentation</a>
+                    </li>
                     
                     {% if current_user.is_anonymous %}
                     <li><a href="{{ url_for('auth.login') }}">Log in</a></li>
@@ -27,6 +27,7 @@
                     <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% endif %}
                 </ul>
+                <button onclick="darkMode()">Dark Mode</button>
             </nav>
             <div class="flashbar">
                 <ul>
