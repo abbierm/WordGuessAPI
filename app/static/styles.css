@@ -17,8 +17,6 @@ body {
 }
 
 
-
-
 /* Nav-Bar */
 .container {
     max-width: 100%;
@@ -58,7 +56,22 @@ body {
     color: black;
 }
 
+#theme-toggle {
+    cursor: pointer;
+    background-color: 0;
+    border: none;
+    opacity: 0.8;
+    padding: auto;
+    border-radius: 50%;
 
+  &:focus {
+    outline: none;
+  }
+}
+
+ion-icon {
+    font-size: 35px;
+}
 
 /* Title bar */
 

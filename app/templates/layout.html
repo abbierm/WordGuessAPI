@@ -5,9 +5,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="initial-scale=1, width=device-width">
         <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        <script src="{{ url_for('static', filename='code/main.js') }}"></script>        
+        <script src="{{ url_for('static', filename='code/main.js') }}"></script>
+        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>        
         <title>WordGuess: {% block title %}{% endblock %}</title>
-       
     </head>
  
     <body>
@@ -27,7 +28,9 @@
                     <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% endif %}
                 </ul>
-                <button onclick="darkMode()">Dark Mode</button>
+                <button onclick="darkMode()" id="theme-toggle" aria-label="switch to dark theme">
+                    <ion-icon name="flashlight-outline"></ion-icon>
+                </button>
             </nav>
             <div class="flashbar">
                 <ul>
@@ -42,6 +45,8 @@
             </div>
                 {% block main %}{% endblock %}
         </div>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>    
     </body>
 </html>
 
