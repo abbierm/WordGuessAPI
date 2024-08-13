@@ -12,7 +12,10 @@
     </head>
  
     <body>
-        <div class="container">
+        <header class="header">
+            <div class="header-right">
+                <div></div>
+            </div>
             <nav class="navbar">
                 <ul>
                     <li><a href="{{ url_for('main.index') }}">WordGuess</a></li>
@@ -28,10 +31,11 @@
                     <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% endif %}
                 </ul>
-                <button onclick="darkMode()" id="theme-toggle" aria-label="switch to dark theme">
-                    <ion-icon name="flashlight-outline"></ion-icon>
-                </button>
             </nav>
+            <button onclick="darkMode()" id="theme-toggle" aria-label="switch to dark theme">
+                <ion-icon name="flashlight-outline"></ion-icon>
+            </button>
+        </header>
             <div class="flashbar">
                 <ul>
                     {% with messages = get_flashed_messages() %}
@@ -44,7 +48,7 @@
                     {% endwith %}
             </div>
                 {% block main %}{% endblock %}
-        </div>
+        
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>    
     </body>

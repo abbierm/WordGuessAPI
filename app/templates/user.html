@@ -14,41 +14,42 @@
             Your Current Solvers
         </h3>
     </div>
-    <div class="table-container">
-        <div class="table-row heading">
-            <div class="row-item">Name</div>
-            <div class="row-item">ID #</div>
-            <div class="row-item">Words Played</div>
-            <div class="row-item">Words Solved</div>
-            <div class="row-item">Avg. Solved</div>
-            <div class="row-item"></div>
-            <div class="row-item"></div>
-        </div>
-        {% for solver in solvers %}
-        <div class="table-row">
-            <div class="row-item">
-                <a href="{{ url_for('main.solver', solver_name=solver.name) }}">{{ solver.name }}</a>
-            </div>
-            <div class="row-item">{{ solver.id }}</div>
-            <div class="row-item">{{ solver.words_played }}</div>
-            <div class="row-item">{{ solver.words_won }}</div>
-            <div class="row-item">{{ solver.avg }}%</div>
-            
-            <div class="row-item">
-                <form action="{{url_for('main.reset_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset all the data on {{ solver.name }}');">
-                    <input type="hidden" value="{{ solver.id }}" name="solver">
-                    <input type="submit" class="reset-button" value="Reset Solver">
-                </form>
-            </div>
-            <div class="row-item">
-                <form action="{{url_for('main.delete_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to delete {{ solver.name }}?  This is permanent and cannot be undone?');">
-                    <input type="hidden" value="{{ solver.id }}" name="solver">
-                    <input type="submit" style="background-color: #dd396d" value="Delete Solver">
-                </form>
-            </div>
-            
-        </div>
-        {% endfor %}
+    <div class="games-table-container">
+        <table id="games">
+            <tr>
+                <th class="solver-heading">Solver Name</th>
+                <th class="solver-heading">Words Played</th>
+                <th class="solver-heading">Words Solved</th>
+                <th class="solver-heading">Avg. Solved</th>
+                <th class="solver-heading"></th>
+                <th class="solver-heading"></th>
+            </tr>
+            {% for solver in solvers %}
+            <tr>
+                <td class="solver-table-item">
+                    <a class="solver-table-name" href="{{ url_for('main.solver', solver_name=solver.name) }}">
+                        {{ solver.name}}
+                    </a>
+                </td>
+                <td class="solver-table-item">{{ solver.words_played }}</td>
+                <td class="solver-table-item">{{ solver.words_won }}</td>
+                <td class="solver-table-item">{{ solver.avg }}</td>
+                <td class="solver-table-item">
+                    <form action="{{url_for('main.reset_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset all the data on {{ solver.name }}');">
+                        <input type="hidden" value="{{ solver.id }}" name="solver">
+                        <input type="submit" class="reset-button" value="Reset Solver">
+                    </form>
+                </td>
+                <td>
+                    <form action="{{url_for('main.delete_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to delete {{ solver.name }}?  This is permanent and cannot be undone?');">
+                        <input type="hidden" value="{{ solver.id }}" name="solver">
+                        <input type="submit" style="background-color: #dd396d" value="Delete Solver">
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
         <div class="table-row">
             <div class="row-item">
                 <form action="{{url_for('auth.register_solver') }}" method="GET">
@@ -59,7 +60,4 @@
         </div>
     </div>
 </div>
-
-
-
 {% endblock main %}

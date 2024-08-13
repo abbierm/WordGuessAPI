@@ -1,37 +1,63 @@
-@font-face {
-    font-family: 'OxygenMono';
+/* @font-face {
+    font-family: nunito-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
     src: url('assets/OxygenMono-Regular.woff') format('woff'),
          url('assets/OxygenMono-Regular.woff2') format('woff2'),
          url('assets/OxygenMono-Regular.tiff')  format('truetype')
-  }
+  } */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
 
 body {
-    /* font-family: ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji"; */
-    font-family: 'OxygenMono';
-    align-content: center;
+    font-family: nunito-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    text-align: center;
+    background-color: #ffffff;
+    color: #333;
+    margin: 5px 20px;
+    padding: 0 16px;
+
+    h1, h2 {
+        color: #17614a;
+    }
 }
 
 .dark-mode {
     background-color: #1d1f21;
     color: #dfedff;
+
+    h1, h2{
+        color: #27a37c;
+    }    
 }
 
 
 /* Nav-Bar */
-.container {
-    max-width: 100%;
-    max-width: 1200px;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    align-content: center;
+    flex-wrap: wrap;
     height: 100%;
-    text-align: center;
-    margin: auto;
+}
+
+@media screen and (max-width: 800px) {
+    .header {
+      max-width: 70em;
+      margin: 0 auto;
+      padding: 0 1.5em;
+      overflow: hidden;
+    }
 }
 
 .navbar {
     top: 0;
     display: flex;
-    width: 100%;
     justify-content: center;
-
+    max-width: 100%;
 }
 
 .navbar ul {
@@ -61,7 +87,6 @@ body {
     background-color: 0;
     border: none;
     opacity: 0.8;
-    padding: auto;
     border-radius: 50%;
 
   &:focus {
@@ -69,24 +94,24 @@ body {
   }
 }
 
+.dark-mode ul li a {
+    color: #dfedff;
+}
+
 ion-icon {
     font-size: 35px;
 }
 
-/* Title bar */
-
+/* Title Bar For Each Page */
 .title {
-    text-align: center;
     margin: .5rem;
     padding: .5rem;
-    color: #17614a;
 }
 
-/* Flashbar */
 
+/* Flashbar */
 .flashbar {
     list-style-type: none;
-    text-align: center;
     margin: 10px;
     color: white;
     font-weight: 500;
@@ -101,18 +126,6 @@ ion-icon {
 
 
 /* Account  */
-
-.page-container {
-    max-width: 1200px;
-    margin: 5px 20px;
-    padding: 0 16px;
-}
-
-.account-heading {
-    font-weight: bold;
-    color: #17614a;
-}
-
 .basic-info-container {
     margin: 10px;
     text-align: start;
@@ -133,7 +146,7 @@ ion-icon {
 }
 
 .account-table-item {
-    border: node;
+    border: none;
     min-width: fit-content;
     padding: 10px 14px;
     text-align: left;
@@ -173,62 +186,6 @@ ion-icon {
     visibility: visible;
 }
 
-/* index */
-.intro {
-    text-align: center;
-}
-
-
-/* forms */
-.form-box {
-    text-align: center;
-}
-
-
-/* user-page table */
-.table-title {
-    text-align: center;
-    margin: 10px;
-    font-weight: bold;
-    color: #17614a;
-}
-
-.table-container {
-    display: flex;
-    flex-flow: column nowrap;
-    margin: 0 auto;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-    box-shadow: 0px 1px 4px rgba(0, 0, 0, .08);
-}
-
-.table-row {
-    display: flex;
-    flex-flow: row nowrap;
-    width: 100%;
-    border-bottom: 1px solid #ddd;
-    justify-content: center;
-    align-items: center;
-    min-height: 40px;
-}
-
-.heading {
-    background-color: #ececec;
-    color: #3e3e3e;
-    
-    font-weight: 700;
-    font-style: normal;
-}
-
-.row-item {
-    display: flex;
-    flex: 1;
-    font-size: 12px;
-    padding: 8px, 0;
-    justify-content: center;
-    align-items: center;
-}
-
 input[type=submit] {
     text-align: center;
     cursor: pointer;
@@ -247,13 +204,14 @@ input[type=submit] {
 .solver-header {
     display: flex;
     justify-content: space-around;
+    margin: 1.5rem;
     align-items: start;
     width: 100%;
 }
 
 .solver-header-title {
     align-self: start;
-    padding-right: 7%;
+    /* padding-right: 7%; */
 }
 
 .solver-table-container {
@@ -267,13 +225,15 @@ input[type=submit] {
 
 .solver-Rtable-heading {
     color: #17614a;
-    text-align: center;
     font-size: 16px;
     font-weight: 700;
 }
 
+.dark-mode .solver-Rtable-heading {
+    color: #27a37c;
+}
+
 .solver-title-text {
-    text-align: center;
     margin: .5rem;
     padding: .5rem;
     color: #17614a;
@@ -315,10 +275,10 @@ input[type=submit] {
 .games-table {
     margin: auto;
 }
+
 .games-table-title-bar {
     display: flex;
     justify-content: space-around;
-    text-align: center;
     margin: 20px;
     align-items: center;
     flex-wrap: nowrap;
@@ -338,7 +298,7 @@ input[type=submit] {
 
 .games-table-container {
     text-align: center;
-    margin: 20px;
+    /* margin: 1.5rem; */
     display: flex;
     align-items: center;
     justify-content: space-around;
@@ -349,7 +309,6 @@ input[type=submit] {
 table {
     border-collapse: collapse;
     border: 1px solid #ddd;
-    max-width: 100%;
 }
 
 .solver-heading {
@@ -381,21 +340,17 @@ table {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    /* margin: 10px; */
     justify-content: space-around;
-    /* margin: 20px;
-    padding: 10px; */
+
 }
 
 .previous-games-link-box {
-    /* float: left; */
     max-width: 50%;
     text-align: center;
     font-size: 12px;
 }
 
 .next-games-link-box {
-    /* float: right; */
     max-width: 50%;
     text-align: center;
     font-size: 12px;

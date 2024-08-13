@@ -5,8 +5,6 @@
 {% endblock title %}
 
 {% block main %}
-
-<div class="page-container">
     <div class="solver-header">
         <div class="solver-header-title">
             <h1 class="solver-title-text">{{ solver.name }}'s<br>Page</h1>     
@@ -53,18 +51,13 @@
                 </div>
             </div>
         </div>
-            
-        
     </div>
-    
-
     <div class="games-table">
         <div class="games-table-title-bar">
             <div class="games-table-title">
                 <h2>Games Table</h2>
             </div>
             <div class="games-search-select">
-                <!-- <p>Filter Games</p> -->
                 <form  action="{{ url_for('main.solver', solver_name=solver.name) }}" method="GET">
                     <select name="filter" id="filterList">
                         <option value="options">Filters</option>
@@ -117,6 +110,6 @@
             </div>
         </div>
     </div>
-</div>
+
 
 {% endblock main %}

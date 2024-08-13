@@ -1,10 +1,10 @@
-from flask import render_template, redirect, url_for, request, flash, g
+from flask import render_template, redirect, url_for, request, flash
 from app.main import bp
 from flask_login import current_user, login_required
 import sqlalchemy as sa
 from app import db
 from app.models import User, Solver, Game
-from pprint import pprint
+
 
 
 @bp.route('/', methods=["GET"])
