@@ -5,58 +5,51 @@
 {% endblock title %}
 
 {% block main %}
-    <div class="solver-header">
-        <div class="solver-header-title">
-            <h1 class="solver-title-text">{{ solver.name }}'s<br>Page</h1>     
+    <div class="solver-info-container">
+        <div class="solver-info-name-container">
+            <h1 class="solver-info-name">{{ solver.name }}'s page</h1>
         </div>
-        <div class="solver-table-container">
-            <div class="solver-Rrow">
-                <div class=".solver-Rrow-cell solver-Rtable-heading">Stats</div>
-            </div>
-            <div class="solver-Rrow">
-                <div class="solver-Rrow-cell Rrow-header">Solver ID</div>
-                <div class="solver-Rrow-cell">{{ solver.id }}</div>
-                <hr class="solver-Rrow-divider">
-                <div class="solver-Rrow-cell Rrow-header">Words Played</div>
-                <div class="solver-Rrow-cell">{{ solver.words_played }}</div>
-            </div>
-            <div class="solver-Rrow">
-                <div class="solver-Rrow-cell Rrow-header">Words Won</div>
-                <div class="solver-Rrow-cell">{{ solver.words_won }}</div>
-                <hr class="solver-Rrow-divider">
-                <div class="solver-Rrow-cell Rrow-header">Average Won</div>
-                <div class="solver-Rrow-cell">{{ solver.avg }}</div>
-            </div>
-            <div class="solver-Rrow">
-                <div class="solver-Rrow-cell Rrow-header">Average Guesses</div>
-                <div class="solver-Rrow-cell">{{ solver.avg_guesses }}</div>
-                <hr class="solver-Rrow-divider">
-                <div class="solver-Rrow-cell Rrow-header">Highest Streak</div>
-                <div class="solver-Rrow-cell">{{ solver.max_streak }}</div>
-            </div>
-            <div class="solver-Rrow">
-                <div class="solver-Rrow-cell Rrow-header">API Key</div>
-                {% if solver.api_key != None %}
-                <div class="solver-Rrow-cell">{{ solver.api_id }}</div>
-                {% else %}
-                <div class="solver-Rrow-cell">None</div>
-                {% endif %}
-            </div>
-            <div class="solver-Rrow">
-                <div class="solver-Rrow-cell ">
-                    <form action="{{ url_for('main.create_new_key') }}" method="POST">
-                        <input type="hidden" value="{{ solver.id }}" name="solver">
-                        <input type="submit" class="reset-button" value="Create New API KEY">
-                    </form>
-                </div>
+        <div class="solver-stats-table-container">
+            <div class="table-container">
+                <table id="solver-stats">
+                    <tr>
+                        <th class="table-heading">Words Played</th>
+                        <th class="table-heading">Words Won</th>
+                        <th class="table-heading">Average Won</th>
+                        <th class="table-heading">Average Guesses</th>
+                    </tr>
+                    <tr>
+                        <td class="table-row">{{ solver.words_played }}</td>
+                        <td class="table-row">{{ solver.words_won }}</td>
+                        <td class="table-row">{{ solver.avg }}</td>
+                        <td class="table-row">{{ solver.avg_guesses }}</td>
+                    </tr>
+                    <tr>
+                        <th colspan="4" class="table-heading">API Key</th>
+                    </tr>
+                    <tr>
+                        {% if solver.api_key != None %}
+                        <td colspan="4" class="table-row">
+                            {{ solver.api_id }}
+                        </td>
+                        {% else %}
+                        <td colspan="4" class="table-row">None</td>
+                        {% endif %}
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="table-row">
+                            <form action="{{ url_for('main.create_new_key') }}" method="POST">
+                            <input type="hidden" value="{{ solver.id }}" name="solver">
+                            <input type="submit" class="reset-button" value="Create New API KEY">
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>
-    <div class="games-table">
+    <div>
         <div class="games-table-title-bar">
-            <div class="games-table-title">
-                <h2>Games Table</h2>
-            </div>
+            <h2>Games Table</h2>
             <div class="games-search-select">
                 <form  action="{{ url_for('main.solver', solver_name=solver.name) }}" method="GET">
                     <select name="filter" id="filterList">
@@ -69,30 +62,30 @@
                 </form>
             </div>
         </div>
-        <div class="games-table-container">
+        <div class="table-container">
             <table id="games">
                 <tr>
-                    <th class="solver-heading">GameID</th>
-                    <th class="solver-heading">Date Played</th>
-                    <th class="solver-heading">Total Guesses</th>
-                    <th class="solver-heading">Results</th>
-                    <th class="solver-heading">Correct Word</th>
-                    <th class="solver-heading">Guesses</th>
+                    <th class="table-heading">GameID</th>
+                    <th class="table-heading">Date Played</th>
+                    <th class="table-heading">Total Guesses</th>
+                    <th class="table-heading">Results</th>
+                    <th class="table-heading">Correct Word</th>
+                    <th class="table-heading">Guesses</th>
                 </tr>
                 {% for game in games %}
                 <tr>
-                    <td class="solver-table-item">{{ game.id }}</td>
-                    <td class="solver-table-item">{{ game.timestamp.strftime('%m-%d-%Y') }}</td>
-                    <td class="solver-table-item">{{ game.guess_count }}</td>
-                    <td class="solver-table-item" id="results">
+                    <td class="table-row">{{ game.id }}</td>
+                    <td class="table-row">{{ game.timestamp.strftime('%m-%d-%Y') }}</td>
+                    <td class="table-row">{{ game.guess_count }}</td>
+                    <td class="table-row" id="results">
                         {% if game.results == True %}
                             Won
                         {% else %}
                             Lost
                         {% endif %} 
                     </td>
-                    <td class="solver-table-item">{{ game.correct_word }}</td>
-                    <td class="solver-table-item">{{ game.guesses }}</td>
+                    <td class="table-row">{{ game.correct_word }}</td>
+                    <td class="table-row">{{ game.guesses }}</td>
                 </tr>
                 {% endfor %}
             </table>

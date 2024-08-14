@@ -14,36 +14,36 @@
             Your Current Solvers
         </h3>
     </div>
-    <div class="games-table-container">
-        <table id="games">
+    <div class="table-container">
+        <table id="solvers">
             <tr>
-                <th class="solver-heading">Solver Name</th>
-                <th class="solver-heading">Words Played</th>
-                <th class="solver-heading">Words Solved</th>
-                <th class="solver-heading">Avg. Solved</th>
-                <th class="solver-heading"></th>
-                <th class="solver-heading"></th>
+                <th class="table-heading">Solver Name</th>
+                <th class="table-heading">Words Played</th>
+                <th class="table-heading">Words Solved</th>
+                <th class="table-heading">Avg. Solved</th>
+                <th class="table-heading"></th>
+                <th class="table-heading"></th>
             </tr>
             {% for solver in solvers %}
             <tr>
-                <td class="solver-table-item">
+                <td class="table-row">
                     <a class="solver-table-name" href="{{ url_for('main.solver', solver_name=solver.name) }}">
                         {{ solver.name}}
                     </a>
                 </td>
-                <td class="solver-table-item">{{ solver.words_played }}</td>
-                <td class="solver-table-item">{{ solver.words_won }}</td>
-                <td class="solver-table-item">{{ solver.avg }}</td>
-                <td class="solver-table-item">
+                <td class="table-row">{{ solver.words_played }}</td>
+                <td class="table-row">{{ solver.words_won }}</td>
+                <td class="table-row">{{ solver.avg }}</td>
+                <td class="table-row">
                     <form action="{{url_for('main.reset_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to reset all the data on {{ solver.name }}');">
                         <input type="hidden" value="{{ solver.id }}" name="solver">
-                        <input type="submit" class="reset-button" value="Reset Solver">
+                        <input type="submit" class="reset-button" value="Reset">
                     </form>
                 </td>
-                <td>
+                <td class="table-row">
                     <form action="{{url_for('main.delete_solver') }}" method="POST" onSubmit="return confirm('Are you sure you want to delete {{ solver.name }}?  This is permanent and cannot be undone?');">
                         <input type="hidden" value="{{ solver.id }}" name="solver">
-                        <input type="submit" style="background-color: #dd396d" value="Delete Solver">
+                        <input type="submit" style="background-color: #dd396d" value="Delete">
                     </form>
                 </td>
             </tr>
