@@ -8,139 +8,49 @@
 <div class="title-box">
     <h1 class="title">WordGuessAPI</h1>
 </div>
-<div>
-    <p class="intro">Welcome! WordGuessAPI is a wordle clone you play via API calls.  Ideally this was created to programmatically test wordle solvers without needing to manually input their answers into the terminal.  WordGuessAPI is primarily written in Python with a bit of HTML and CSS for the website.  I also used Flask as the web framework, SQLAlchemy/SQLite to manage the database, and Pytest for testing.</p>
+<div class="intro-container">
+    <p style="text-align: center;">
+        Welcome! WordGuessAPI is a wordle clone you play by making API calls. Ideally this was created to to test and provide a large amount of feedback and data for people who programmed their own wordle solvers.  
+    </p>
+    <br>
 </div>
 <hr>
    
-<div class="front-steps">
-    <h1>How To Play</h1>
-    <h3>Create a solver that can make the following POST requests:</h3>
-    <ul>
-        <li><strong>https://www.wordguess_api.com/api/tokens</strong>
-            <ul>
-                <li>
-                    <strong>POST</strong> request for a 30 min api token
-                </li>
-                <li>
-                    User must have an account and confirmed email address.
-                </li>
-                <li><strong>Requirements</strong>
-                    <ul>
-                        <li>Basic Auth header with username and password</li>
-                    </ul>
-                </li>                
-                <li>Response will get returned as a JSON token in the form:</li>
-                    <ul>
-                        <li style="list-style: none;">
-                            {"token": &lt;"unique 30 min token goes here"&gt;}
-                        </li>
-                    </ul>
-            </ul>
-        </li>
-        <br>
-        <li><strong>http://www.wordguess_api.com/api/start</strong>
-            <ul>
-                <li>
-                    <strong>POST</strong> request that starts a new game.
-                </li>
-                <li><strong>Requirements</strong>
-                    <ul>
-                        <li>Auth token inside of the header in the following format: </li>
-                        <ul>
-                            <li style="list-style: none;">{"Authorization": "Bearer: &lt;"unique token"&gt;"}</li>
-                        </ul>
-                        <li>Request body that contains the unique solver id
-                        <ul>
-                            <li style="list-style: none;">{"solver_id": &lt;"unique solver_id found on solver's page&gt;"}</li>
-                        </ul>
-                    </ul>
-                </li>
-                <li><strong>Example using python requests:</strong>
-                    <ul>
-                        <li style="list-style: none;">
-                            <pre><code>
-    import requests
-    
-    token_header = {"Authorization": "Bearer: my unique token"}
-
-    request_body = {"solver_id": "my solver's unique api id"}
-
-    r = requests.post(
-        url="https://www.wordguess_api.com/api/start",
-        headers=token_header,
-        json=request_body
-    )
-
-                            </code></pre>
-                        </li>
-                    </ul>
-                </li>
-                <li>Responses from the start and guess will be returned as a JSON in the following format:
-                    <ul>
-                        <li style="list-style: none;">
-                            <pre><code>
-    {
-        "game_token": 
-        "solver_name": "The name you gave your solver",
-        "status": "True if game is active else False",
-        "guess_count": "0",
-        "guesses": "Empty dictionary used to store guesses as received",
-        "correct_word": "*****",
-        "message": "Optional error message",
-        "results": "'None' if game is still current else 'won' if the user won or 'lost'"
-    }
-                            </code></pre>
-                    </ul>
-                </li>
-            </ul>
-        </li>
-        <br>
-        <li><strong>http://www.wordguess_api.com/api/guess</strong>
-            <ul>
-                <li>
-                    <strong>POST</strong> request that makes a guess to game started via the start request above.
-                </li>
-                <li><strong>Requirements</strong>
-                    <ul>
-                        <li>Request body that contains the game token and a valid 5 letter word
-<pre><code>
-{
-    "game_token": "game token received in starting payload",
-    "guess": "5 letter guess"
-}
-</code></pre>            
-                    </ul>
-                </li>
-                <li><strong>Example using python requests:</strong>
-                    <ul>
-                        <li style="list-style: none;">
-                            <pre><code>
-    import requests
-    
-    request_body = {"game_token": "the game's unique iD"}
-
-    r = requests.post(
-        url="https://www.wordguess_api.com/api/guess",
-        json=request_body
-    )
-                            </code></pre>
-                        </li>
-                    </ul>
-                </li>
-                <li>Response will be the same from making a start request. If the solver's guess was valid, the "guesses" value will be in the form:
-                    <ul>
-                        <li style="list-style: none;">
-                            <pre><code>
-    {
-        "1": {"guess": "user's 5 letter guess", "feedback": "5 letter feedback"}
-    }
-                            </code></pre>
-                    </ul>
-                </li>
-            </ul>
-        </li>
+<div class="how-to-play">
+    <h1>How To Play Wordle</h1>
+    <p>At the website: #TODO PUT WEBSITE HERE once a day a new 5 letter word is chosen. Users have 6 guesses to try and figure out what the word is.  After each guess, the website will display the user's guess with a color coded background based on the correct word. The different colors are: </p>
+    <ul class="color-list">
+        <li><mark style="background-color: #17614a; color: white;"> Green </mark>: The letter is in the word and in the correct spot</li>
+        <li><span style="background-color: #b59d3e; color: black;"> Yellow </span>: The letter is in the word but not in the correct spot</li>
+        <li><mark style="background-color: #3a3a3c; color: white;"> Grey </mark>: The letter is not in the word (or has already been accounted for in another guess spot)</li>
     </ul>
 </div>
+<br>
+<img class="wordle-example-pic" src="{{ url_for('static', filename='assets/example_wordle_screenshot.jpg') }}">    
+<br>
+<div class="how-to-play">
+    <p>For example, in the screen shot shown above the user took 4 guesses (starting at the word "GREAT") to determine the correct word "PIXIE".  
+</div>      
+<hr>
+
+<div class="how-to-play" style="text-align: left;">
+    <h1>How to play WordGuessAPI</h1>
+    <p>To emulate the color feedback Wordle gives, WordGuessAPI returns a 5 character string with a 'G' (Green), 'Y' (Yellow), or 'B' (Grey/Black). Guess feedback is sent back to the player inside of a nested JSON dictionary. If the Wordle screenshot above was played via WordGuessAPI instead, the feedback would look like: 
+
+    </p>
+    <pre><code class="language-json">
+{
+    "1": {"guess": "GREAT", "feedback": "BBYBB"},
+    "2": {"guess": "SLIME", "feedback": "BBYBG"},
+    "3": {"guess": "INDIE", "feedback": "YBBGG"},
+    "4": {"guess": "PIXIE", "feedback": "GGGGG"}
+}
+    </code></pre>
+
+</div>
+
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
 {% endblock%}
 

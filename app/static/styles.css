@@ -42,8 +42,12 @@ body {
     background-color: #1d1f21;
     color: #dfedff;
 
-    h1, h2{
+    h1 {
         color: #16614a;
+    }
+
+    h2, h3 {
+        color: #646666;
     }
     
     a {
@@ -52,6 +56,10 @@ body {
 
     table {
         border: 1px solid #333332;
+    }
+
+    strong {
+        color: #16614a;
     }
 }
 
@@ -191,9 +199,47 @@ ion-icon {
 }
 
 /* Index- Homepage */
-.front-steps {
+.intro-container {
     text-align: left;
+
 }
+
+ .intro-container strong {
+    text-decoration-line: underline;
+}
+
+.dark-mode .intro-container strong {
+    color: #17614a;
+    text-decoration-line: underline;
+}
+
+
+.how-to-play {
+    text-align: left;
+    padding: 2px;
+    margin: auto 20px;
+    overflow-wrap: anywhere;
+}
+
+.how-to-play li {
+    padding: 4px;
+    display: inline-block;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.wordle-example-pic {
+    text-align: center;
+    max-width: 350px;
+}
+
+.how-to-play p {
+    padding: 4px;
+    margin-bottom: 10px;
+}
+
+
+
 /* Account  */
 .basic-info-container {
     margin: 10px;
