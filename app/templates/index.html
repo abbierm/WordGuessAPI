@@ -77,13 +77,22 @@ token_payload = requests.post(
 
 <div class="how-to-play" style="text-align: left;">
     <h2>Starting A Game</h2>
-        <p>You can start a new game by......</p>
+        <p>Your solver can start a new game by sending a POST request to the 'api/start' with the auth token inside of a header and sending the solver id inside of the post body. <i>Registered users can add solvers and create a solver id on that solver's page.</i> </p>
     
     <pre><code class="language-python">
 import requests
-from requests.auth import HTTPBasicAuth
 
-# PUT SOME CODE HERE
+auth_header = {"Authorization": "Bearer 'your unique token'"}
+request_body = {"solver_id": "your solver's id"}
+
+url = 'https://www.wordguess_api.com/api/start'
+
+r = requests.post(
+    url=url,
+    headers=auth_header,
+    json=request_body
+)
+
             </code></pre>
 </div>
 
