@@ -35,8 +35,7 @@
 
 <div class="how-to-play" style="text-align: left;">
     <h1>How to play WordGuessAPI</h1>
-    <p>To emulate the color feedback Wordle gives, WordGuessAPI returns a 5 character string with a 'G' (Green), 'Y' (Yellow), or 'B' (Grey/Black). Guess feedback is sent back to the player inside of a nested JSON dictionary. If the Wordle screenshot above was played via WordGuessAPI instead, the feedback would look like: 
-
+    <p>To emulate the color feedback Wordle gives, WordGuessAPI returns a 5 character string with a 'G' (Green), 'Y' (Yellow), or 'B' (Grey/Black). Guess feedback is sent back to the player inside of a nested json (part of a larger payload) dictionary. If the Wordle screenshot above was played via WordGuessAPI instead, the feedback would look like: 
     </p>
     <pre><code class="language-json">
 {
@@ -46,11 +45,49 @@
     "4": {"guess": "PIXIE", "feedback": "GGGGG"}
 }
     </code></pre>
+</div>
+<div class="how-to-play" style="text-align: left;">
+    <h2>Requesting A Token</h2>
+        <p>Registered users can start a game session by requesting a token using their username and password using a basic auth protocol. Tokens allow the user to interact with the API for 30 min until needing to request another.</p>
 
+    <pre><code class="language-python">
+import requests
+from requests.auth import HTTPBasicAuth
+
+basic_auth = HTTPBasicAuth(
+    "your unique username",
+    "your user's password"
+)
+
+url = "https://www.wordguess_api.com/api/tokens"
+
+token_payload = requests.post(
+    url=url,
+    auth=basic_auth
+)
+            </code></pre>
+
+        <p>Tokens are returned in the following JSON format</p>
+        <pre><code class="language-json">
+{
+    "token": "your unique 30 min token"
+}
+                        </code></pre>
+</div>
+
+<div class="how-to-play" style="text-align: left;">
+    <h2>Starting A Game</h2>
+        <p>You can start a new game by......</p>
+    
+    <pre><code class="language-python">
+import requests
+from requests.auth import HTTPBasicAuth
+
+# PUT SOME CODE HERE
+            </code></pre>
 </div>
 
     
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script>
+
 {% endblock%}
 
