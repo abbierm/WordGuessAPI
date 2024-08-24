@@ -12,7 +12,7 @@
     <p style="text-align: center;">
         Welcome! WordGuessAPI is a wordle clone you play by making API calls. Ideally this was created to to test and provide a large amount of feedback and data for people who programmed their own wordle solvers.  
     </p>
-    <br>
+    
 </div>
 <hr>
    
@@ -25,9 +25,9 @@
         <li><mark style="background-color: #3a3a3c; color: white;"> Grey </mark>: The letter is not in the word (or has already been accounted for in another guess spot)</li>
     </ul>
 </div>
-<br>
+
 <img class="wordle-example-pic" src="{{ url_for('static', filename='assets/example_wordle_screenshot.JPG') }}">    
-<br>
+
 <div class="how-to-play">
     <p>For example, in the screen shot shown above the user took 4 guesses (starting at the word "GREAT") to determine the correct word "PIXIE".  
 </div>      
@@ -48,7 +48,9 @@
 </div>
 <div class="how-to-play" style="text-align: left;">
     <h2>Requesting A Token</h2>
-        <p>Registered users can start a game session by requesting a token using their username and password using a basic auth protocol. Tokens allow the user to interact with the API for 30 min until needing to request another.</p>
+        <p>
+            Registered users can start a game session by requesting a token using their username and password using a basic auth protocol. Tokens allow the user to interact with the API for 30 min until needing to request another.
+        </p>
 
     <pre><code class="language-python">
 import requests
@@ -66,8 +68,11 @@ token_payload = requests.post(
     auth=basic_auth
 )
             </code></pre>
-
-        <p>Tokens are returned in the following JSON format</p>
+        
+        <p>
+            Tokens are returned in the following JSON format:
+        </p>
+        
         <pre><code class="language-json">
 {
     "token": "your unique 30 min token"
@@ -93,7 +98,63 @@ r = requests.post(
     json=request_body
 )
 
-            </code></pre>
+    </code></pre>
+    
+    <p>The response for starting a game makirom requests.auth import HTTPBasicAuthng a guess will be returned as in JSON in the following format.</p>
+    
+
+    <pre><code class="language-json">
+{
+    "game_token": "unique game token used to make guesses",
+    "solver_name": "your solvers name",
+    "correct_word": "Will be ***** unless game is complete, then full word will be returned",
+    "status": "True if game is still current",
+    "guess_count": "Integer number of guesses",
+    "guesses": "{}",
+    "message": "Message if there is an error with your guess",
+    "results": "None if game is current else 'Won' or 'lost'"
+}    
+    </code></pre>
+    
+    <p>Note that if guesses have been made the "guesses" key will be in for format shown in "How to Play WordguessAPI"</p>
+</div>
+<div class="how-to-play" style="text-align: left;">
+    <h2>Making a Guess</h2>
+    <p>
+        Once you have started the game your Solver can make guesses. Using the "game_token" value from the start, a valid 5 letter guess, and the same auth header used to start the game, your solver can send a guess request to the 'api/guess' route with the following form body
+    </p>
+    <pre><code class="language-json">
+{
+    "game_token": "your token that was sent via the start response",
+    "guess": "a valid 5 letter guess"
+}    
+    </code></pre>
+    
+    <p>
+        Using the requests Python library, an example 'api/guess' request might be put together in the following way:
+    </p>
+    
+    <pre><code class="language-python">
+import requests
+
+url = "http://www.wordguess_api.com/api/guess"
+
+auth_header = {"Authorization": "Bearer 'your unique token'"}
+
+guess_body = {
+    "game_token": "not a real game token",
+    "guess": "climb"
+}
+
+
+r = requests.post(
+    url=url,
+    json=guess_body,
+    headers=auth_header
+)
+
+    </code></pre>
+
 </div>
 
     
