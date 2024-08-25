@@ -18,15 +18,15 @@
    
 <div class="how-to-play">
     <h1>How To Play Wordle</h1>
-    <p>At the website: #TODO PUT WEBSITE HERE once a day a new 5 letter word is chosen. Users have 6 guesses to try and figure out what the word is.  After each guess, the website will display the user's guess with a color coded background based on the correct word. The different colors are: </p>
+    <p>Every day at the Wordle website <a href="https://powerlanguage-wordle.github.io/">(https://powerlanguage-wordle.github.io/)</a> a new 5 letter word is chosen. Users have 6 guesses to try and figure out what the word is.  After each guess, the website will display the user's guess with a color coded background based on the correct word. The different colors are: </p>
     <ul class="color-list">
         <li><mark style="background-color: #17614a; color: white;"> Green </mark>: The letter is in the word and in the correct spot</li>
-        <li><span style="background-color: #b59d3e; color: black;"> Yellow </span>: The letter is in the word but not in the correct spot</li>
+        <li><span style="background-color: #d5c076; color: black;"> Yellow </span>: The letter is in the word but not in the correct spot</li>
         <li><mark style="background-color: #3a3a3c; color: white;"> Grey </mark>: The letter is not in the word (or has already been accounted for in another guess spot)</li>
     </ul>
 </div>
 
-<img class="wordle-example-pic" src="{{ url_for('static', filename='assets/example_wordle_screenshot.JPG') }}">    
+<img class="wordle-example-pic" src="{{ url_for('static', filename='assets/Wordle_Animation.gif') }}">    
 
 <div class="how-to-play">
     <p>For example, in the screen shot shown above the user took 4 guesses (starting at the word "GREAT") to determine the correct word "PIXIE".  
@@ -37,7 +37,7 @@
     <h1>How to play WordGuessAPI</h1>
     <p>To emulate the color feedback Wordle gives, WordGuessAPI returns a 5 character string with a 'G' (Green), 'Y' (Yellow), or 'B' (Grey/Black). Guess feedback is sent back to the player inside of a nested json (part of a larger payload) dictionary. If the Wordle screenshot above was played via WordGuessAPI instead, the feedback would look like: 
     </p>
-    <pre><code class="language-json">
+    <pre><code class="language-python">
 {
     "1": {"guess": "GREAT", "feedback": "BBYBB"},
     "2": {"guess": "SLIME", "feedback": "BBYBG"},
@@ -73,7 +73,7 @@ token_payload = requests.post(
             Tokens are returned in the following JSON format:
         </p>
         
-        <pre><code class="language-json">
+        <pre><code class="language-python">
 {
     "token": "your unique 30 min token"
 }
@@ -103,7 +103,7 @@ r = requests.post(
     <p>The response for starting a game makirom requests.auth import HTTPBasicAuthng a guess will be returned as in JSON in the following format.</p>
     
 
-    <pre><code class="language-json">
+    <pre><code class="language-python">
 {
     "game_token": "unique game token used to make guesses",
     "solver_name": "your solvers name",
@@ -123,7 +123,7 @@ r = requests.post(
     <p>
         Once you have started the game your Solver can make guesses. Using the "game_token" value from the start, a valid 5 letter guess, and the same auth header used to start the game, your solver can send a guess request to the 'api/guess' route with the following form body
     </p>
-    <pre><code class="language-json">
+    <pre><code class="language-python">
 {
     "game_token": "your token that was sent via the start response",
     "guess": "a valid 5 letter guess"

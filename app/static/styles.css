@@ -37,6 +37,10 @@ body {
         
     }
 
+    h2 {
+        color: #dd396d;
+    }
+
     a {
         color: black;
     }
@@ -56,8 +60,12 @@ body {
     background-color: #1d1f21;
     color: #dfedff;
 
-    h1, h2 {
+    h1 {
         color: #16614a;
+    }
+
+    h2 {
+        color: #bb5273;
     }
 
     h3 {
@@ -67,6 +75,10 @@ body {
     a {
         color: #dfedff;
     }
+    
+    p > a {
+        color: #bb5273;
+    }
 
     table {
         border: 1px solid #333332;
@@ -75,6 +87,10 @@ body {
     strong {
         color: #16614a;
     }
+}
+
+p > a {
+    color: #bb5273;
 }
 
 /* Basic Tables */
@@ -233,6 +249,10 @@ ion-icon {
     padding: 2px;
     margin: auto 20px;
     overflow-wrap: anywhere;
+
+    h2 {
+        text-decoration-line: underline;
+    }
 }
 
 .how-to-play li {
