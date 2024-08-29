@@ -25,8 +25,6 @@ class GameData(BaseModel):
     solver_name: str
     status: bool = True
     guess_count: int
-    status: bool = True
-    guess_count: int
     guesses: Optional[Dict[int, GuessFeedback]] = None
     correct_word: str
     message: str
