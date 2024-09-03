@@ -16,12 +16,14 @@
         <script>
             if (localStorage.getItem('darkMode') == 'enabled') {
                 document.body.classList.toggle("dark-mode");
+                document.getElementById("codeColor").href = 
+                "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.css";
             }
         </script>
         <header class="header">
-            <div class="header-right">
+            <div class="header-left">
                 <div class="v8-logo">
-                    <img src="{{ url_for('static', filename='assets/words_logo.png') }}">
+                    <img src="{{ url_for('static', filename='assets/wg_logo.png') }}">
                 </div>
             </div>
             <nav class="navbar">

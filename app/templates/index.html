@@ -10,15 +10,25 @@
 </div>
 <div class="intro-container">
     <p style="text-align: center;">
-        Welcome! WordGuessAPI is a wordle clone you play by making API calls. Ideally this was created to to test and provide a large amount of feedback and data for people who programmed their own wordle solvers.  
+        WordGuessAPI is an API for programmable Wordle Solvers.  This was created as a way for people to test their Python Wordle solvers without needing to manually type out the answers into a terminal screen. 
     </p>
+    <div class="how-to-play">
+        <p><strong style="color: #16614a">The key features for WordGuessAPI are:</strong></p>
+        <ul class="color-list">
+            <li><strong>API endpoints</strong> to play WordGuessAPI (Wordle), view your account, and access game information including all of the words played.</li>
+            <li><strong>Manages multiple solvers</strong> with their own statistics and gameplay history.</li>
+            <li><strong>Graphically access </strong>your account, register solvers, and view statistics via this website.</li>
+            <li><strong>Beginner friendly documentation</strong> to help new Python programmers create and their their own Wordle solver.</li>
+            <li><strong>Free</strong> of charge!</li>
+        </ul>
+    </div>
+
     
 </div>
-<hr>
-   
+<hr>  
 <div class="how-to-play">
     <h1>How To Play Wordle</h1>
-    <p>Every day at the Wordle website <a href="https://powerlanguage-wordle.github.io/">(https://powerlanguage-wordle.github.io/)</a> a new 5 letter word is chosen. Users have 6 guesses to try and figure out what the word is.  After each guess, the website will display the user's guess with a color coded background based on the correct word. The different colors are: </p>
+    <p>Every day at the <a href="https://powerlanguage-wordle.github.io/"> Wordle website</a> a new 5 letter word is chosen. Users have 6 guesses to try and figure out what the word is.  After each guess, the website will display the user's guess with a color coded background based on the correct word. The different colors are: </p>
     <ul class="color-list">
         <li><mark style="background-color: #17614a; color: white;"> Green </mark>: The letter is in the word and in the correct spot</li>
         <li><span style="background-color: #d5c076; color: black;"> Yellow </span>: The letter is in the word but not in the correct spot</li>
@@ -35,7 +45,7 @@
 
 <div class="how-to-play" style="text-align: left;">
     <h1>How to play WordGuessAPI</h1>
-    <p>To emulate the color feedback Wordle gives, WordGuessAPI returns a 5 character string with a 'G' (Green), 'Y' (Yellow), or 'B' (Grey/Black). Guess feedback is sent back to the player inside of a nested json (part of a larger payload) dictionary. If the Wordle screenshot above was played via WordGuessAPI instead, the feedback would look like: 
+    <p>To emulate the color feedback Wordle gives, WordGuessAPI returns a 5 character string with a 'G' (Green), 'Y' (Yellow), or 'B' (Grey/Black). Guess feedback is sent back to the player inside of a nested JSON (part of a larger payload) dictionary. If the Wordle screenshot above was played via WordGuessAPI instead, the feedback would look like: 
     </p>
     <pre><code class="language-python">
 {
@@ -165,10 +175,12 @@ r = requests.post(
         Generally if you have a Wordle solver you will want it to play multiple games in a row.  
     </p>
 </div>
-
-<img src="{{ url_for('static', filename='assets/api_loop.png')}}">
-
-<div class="how-to-play" style="text-align: left;">
+<div class="loop-image-box">
+    <div class="loop-image-container">
+        <img src="{{ url_for('static', filename='assets/api_loop.png')}}">
+    </div>
+</div>
+<div class="how-to-play">
     <p>
         An example of how a solver might be structured in order to interact with the WordGuessAPI to play games
     </p>
