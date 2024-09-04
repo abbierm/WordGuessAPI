@@ -5,7 +5,6 @@ This includes register, login, logout, and requesting a new password
 """
 
 from app import db
-from app.models import User, Game, Solver
 from sqlalchemy import exc
 import sqlalchemy as sa
 

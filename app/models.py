@@ -168,7 +168,7 @@ class Solver(db.Model):
     
     def to_dict(self):
         payload = {
-            "id": self.api_id,
+            "api_id": self.api_id,
             "name": self.name,
             "words_played": self.words_played,
             "words_won": self.words_won,

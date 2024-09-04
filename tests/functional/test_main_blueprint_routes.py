@@ -41,6 +41,7 @@ def test_user_homepage(test_client, auth):
     assert b'Hello, user4!' in response.data
     auth.logout()
 
+
 def test_user_not_logged_in_homepage(test_client):
     """
     GIVEN a flask application configured for testing
@@ -48,9 +49,9 @@ def test_user_not_logged_in_homepage(test_client):
         no current user logged in
     THEN check if the response is valid
     """
-    response = test_client.get('user/user1')
-    assert response.status_code == 401
-    assert b'Unauthorized' in response.data
+    response = test_client.get('user/user1', follow_redirects=True)
+    assert b'Please log in to view this page!' in response.data
+
 
 def test_reset_solver_post(test_client, init_database, auth):
     """
@@ -120,10 +121,9 @@ def test_solver_page_not_logged_in(test_client):
         with a flash banner telling the user they must be logged in.
     """
     response = test_client.get('/solver/solver43', follow_redirects=True)
-    assert response.status_code == 401
-    assert b'Unauthorized' in response.data
+    assert response.status_code == 200
+    assert b'Please log in to view this page!' in response.data
   
-
 
 def test_solver_page_not_users_solver(test_client, auth):
     """
@@ -153,13 +153,13 @@ def test_create_api_key(test_client, auth, init_database):
     """
     auth.login()
     response = test_client.post(
-                '/create_api_key',
+                '/create_api_id',
                 data=dict(solver=6),
                 follow_redirects=True
             )
 
     assert response.status_code == 200
-    assert b'<h1 class="solver-title-text">solver43\'s<br>Page</h1>' in response.data
+    assert b'<h1 class="solver-info-name">solver43\'s page</h1>' in response.data
     assert b"bd64d06a6d271e3a9254afd0e7a94943" not in response.data
     auth.logout()
 

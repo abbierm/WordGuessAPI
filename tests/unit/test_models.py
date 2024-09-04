@@ -90,7 +90,6 @@ def test_solver_to_dict(new_solver):
     """
     test_payload = new_solver.to_dict()
     assert test_payload["name"] == "word_guess_solver"
-    assert test_payload["user_id"] == 1
     assert test_payload["words_played"] == 0
     assert test_payload["words_won"] == 0
 
@@ -98,7 +97,6 @@ def test_solver_to_dict(new_solver):
 # =============================================================
 # Game Model Tests
 # =============================================================
-
 def test_add_game(new_solver):
     """
     Given a new solver and a correct word

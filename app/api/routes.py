@@ -4,11 +4,12 @@ from app import db, game_cache
 from app.api import bp
 from app.api.errors import bad_request
 from app.api.auth import token_auth
-from app.models import Solver, Game
+from app.models import Solver, Game, User
 from app.wordguess import create_game, game_loop
 from flask import request
 import sqlalchemy as sa
 from pydantic import BaseModel, ValidationError, ConfigDict
+
 
 
 class Start(BaseModel):
@@ -19,6 +20,7 @@ class Guess(BaseModel):
     model_config = ConfigDict(strict=True)
     game_token: str
     guess: str
+
 
 
 #===============================================================
@@ -41,7 +43,7 @@ def start_game():
     # solver matches the user's token auth credentials
     solver = Solver.check_api_id(start_data.solver_id)
     if not solver or user.id != solver.user_id:
-        return bad_request("Invalid solver_id.")
+        return bad_request("Invalid solver_id")
 
     # Creates new game in wordguess.py file and returns starting payload
     starting_game_payload = create_game(
@@ -71,20 +73,22 @@ def make_guess():
 @bp.route('/lookup_solver/<string:solver_name>', methods=["GET"])
 @token_auth.login_required
 def lookup_solver(solver_name):
-    solver = db.session.scalar(db.select(Solver).where(Solver.name == solver_name))
-    if solver is None:
+    """
+        Looks up the solver and returns a Dictionary of the solver's stats
+
+
+        Parsing the header manually (in the same way that the Flask_HTTPAuth
+        library does) to get access to the user instance. 
+        
+        Yes this is redundant BUT it allows me to make sure user solver
+        belongs to the authorized user. Also allows me to send solver_ids 
+        via API calls without it being too incredibly insecure. 
+    """
+    token = request.headers.get('Authorization').split(None, 1)[1]
+    user = User.check_token(token)
+    solver = db.session.scalar(db.select(Solver).where(
+                                        Solver.name == solver_name))
+    if solver is None or user.id != solver.user_id:
         return bad_request(f'Unable to find solver with the name {solver_name}')
     payload = solver.to_dict()
     return payload
-
-
-@bp.route('/lookup_games/<string:solver_name>', methods=["GET"])
-@token_auth.login_required
-def get_games(solver_name):
-    solver = db.session.scalar(db.select(
-                                    Solver).where(Solver.name == solver_name))
-    page = request.args.get('page', 1, type=int)
-    per_page = min(request.args.get('per_page', 50, type=int), 100)
-    return Game.to_collection_dict(
-        sa.select(Game).where(Game.solver_id == solver.id), 
-        page, per_page, 'api.get_games')

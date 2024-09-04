@@ -40,6 +40,7 @@ def test_adding_duplicate_usernames(init_database):
     """
     assert User.check_duplicate_username('user1') == True
     
+
 def test_duplicate_email_check(init_database):
     """
     GIVEN a configured flask app and initialized db with registered users
@@ -100,9 +101,9 @@ def test_reset_password_token(init_database):
     assert user.id == returned_user.id
 
 
-# #====================================================================
-# # Solver Model Tests
-# #==================================================================== 
+#====================================================================
+# Solver Model Tests
+#==================================================================== 
 def test_adding_new_solver(init_database):
     """
     GIVEN a configured flask app and testing database,
@@ -127,15 +128,13 @@ def test_solver_to_dict(init_database):
     """
     solver = db.session.scalar(db.select(Solver).where(Solver.id == 2))
     payload = solver.to_dict()
-    assert payload["id"] == 2
     assert payload["name"] == 'solver21'
-    assert payload["user_id"] == 2
     assert payload["words_played"] == 10
     assert payload["words_won"] == 8
     assert payload["avg_won"] == 80
     assert payload["avg_guesses"] == 4.5
     assert payload["max_streak"] == 5
-    assert payload["api_key"] =='bd64d06a6d271e3a9254afd0e7a94977'
+    assert payload["api_id"] =='bd64d06a6d271e3a9254afd0e7a94977'
 
 
 def test_make_solver_api_key(init_database):
@@ -145,10 +144,10 @@ def test_make_solver_api_key(init_database):
     THEN check if API key was created in the correct format
     """
     solver = db.session.scalar(db.select(Solver).where(Solver.id == 2))
-    solver.make_api_key()
-    assert solver.api_key != 'bd64d06a6d271e3a9254afd0e7a94977'
-    assert type(solver.api_key) == str
-    assert len(solver.api_key) == 32
+    solver.make_api_id()
+    assert solver.api_id != 'bd64d06a6d271e3a9254afd0e7a94977'
+    assert type(solver.api_id) == str
+    assert len(solver.api_id) == 32
 
 
 def test_check_api_key(init_database):
@@ -157,7 +156,7 @@ def test_check_api_key(init_database):
     WHEN calling the check_api() static method with a valid API key
     THEN check if the returned solver is correct
     """
-    solver = Solver.check_key('bd64d06a6d271e3a9254afd0e7a94978')
+    solver = Solver.check_api_id('bd64d06a6d271e3a9254afd0e7a94978')
     assert solver.name == 'solver22'
 
 
@@ -169,7 +168,7 @@ def test_check_api_key_incorrect(init_database):
     THEN check if the solver returned from check_key 
         is None
     """
-    solver = Solver.check_key('bd64d06a6d271e3a9254afd0e7a94975')
+    solver = Solver.check_api_id('bd64d06a6d271e3a9254afd0e7a94975')
     assert solver is None
 
 
@@ -260,6 +259,7 @@ def test_get_solver_games(init_database):
     games_list = list(db.session.scalars(games_query))
     assert len(games_list) == 2
 
+
 def test_get_solver_games_lost(init_database):
     """
     GIVEN a configured flask app and database
@@ -271,9 +271,9 @@ def test_get_solver_games_lost(init_database):
     games_list = list(db.session.scalars(games_query))
     assert len(games_list) == 1
 
-# #====================================================================
-# # Game Model Tests
-# #====================================================================
+#====================================================================
+# Game Model Tests
+#====================================================================
 def test_add_game(init_database):
     """
     GIVEN an initialized flask app and solver instance
@@ -283,116 +283,13 @@ def test_add_game(init_database):
     new_game = Game(
             solver_id = 2,
             correct_word = 'knead',
+            user_id=1,
+            guesses="",
+            feedback="",
+            guess_count=0
     )
     db.session.add(new_game)
     db.session.commit()
-
     game_row = db.session.scalar(db.select(Game).where(Game.id == new_game.id))
     assert game_row != None
     assert game_row.solver_id == 2
-
-
-def test_update_game(init_database):
-    """
-    GIVEN an initialized flask app and filled database
-    WHEN calling the update_game() class method with a guess and feedback on the game instance, 
-    THEN checking if the game row instance was updated correctly.
-    """
-    new_game = Game(solver_id=2, correct_word='hello')
-    db.session.add(new_game)
-    db.session.commit()
-    new_game.update_game(guess="anime", feedback="BBBBY")
-    assert new_game.guess_count == 1
-    assert new_game.guesses == "anime"
-    assert new_game.feedback == "BBBBY"
-
-
-def test_get_token(init_database):
-    """
-    Tests both the get_token() and check_toke() methods
-
-    GIVEN a flask app and initialized filled db,
-    WHEN creating a new token using the get_token() method
-    THEN check if check_token() static method with the token 
-        as an argument returns True
-    """
-    active_game = Game(solver_id=2, correct_word='model')
-    db.session.add(active_game)
-    db.session.commit()
-    active_game.get_token()
-    assert Game.check_token(active_game.token) == True
-
-
-def test_get_payload_no_arguments(init_database):
-    """
-    GIVEN a initialized flask app with a filled db,
-    WHEN calling the create_payload method without arguments
-    THEN check if the payload contains all of the desired information
-    """
-    game = db.session.get(Game, 4)
-    payload = game.create_payload()
-    assert payload['game_id'] == 4
-    assert payload['token'] == None
-    assert payload['solver_id'] == 4
-    assert payload['status'] == False
-    assert payload['guess_count'] == 5
-    assert payload['guesses'] == {}
-    assert payload['correct_word'] == '*****'
-    assert payload['message'] == 'None'
-    assert payload['results'] ==  'None'
-
-
-def test_game_payload_with_correct_word(init_database):
-    """
-    GIVEN a initialized flask app with a filled db,
-    WHEN calling the create_payload method with a game row using the
-        'include_correct'=True
-    THEN check if the payload contains the correct information
-    """
-    game = db.session.get(Game, 4)
-    payload = game.create_payload(include_correct=True)
-    assert payload['game_id'] == 4
-    assert payload['correct_word'] == 'beats'
-
-
-def test_game_payload_without_correct_word(init_database):
-    """
-    GIVEN initialized flask app and filled db,
-    WHEN calling the create_payload method on a game row instance
-        setting the 'include_correct' argument to False
-    THEN check if the payload doesn't contain the correct word
-    """
-    game = db.session.get(Game, 4)
-    payload = game.create_payload(include_correct=False)
-    assert payload['game_id'] == 4
-    assert payload['correct_word'] == '*****'
-    
-
-def test_game_payload_with_feedback(init_database):
-    """
-    GIVEN initialized flask app and filled db,
-    WHEN calling the create_payload method on a game row instance
-        setting the 'include_feedback' argument to True
-    THEN check if the payload contains the correctly formatted guesses
-    """
-    game = db.session.get(Game, 4)
-    payload = game.create_payload(include_feedback=True)
-    assert payload["guesses"] == {
-                            1: {"guess": "tests", "feedback": "BGBGG"}, 
-                            2: {"guess": "corgi", "feedback": "BBBBB"},
-                            3: {"guess": "flask", "feedback": "BBGYB"},
-                            4: {"guess": "ghost", "feedback": "BBBYY"},
-                            5: {"guess": "beats", "feedback": "GGGGG"}
-                        }
-
-
-def test_game_payload_with_message(init_database):
-    """
-    GIVEN an initialized flask app and database,
-    WHEN calling the create_payload method with a message on a game,
-    THEN check that the payload contains the given message
-    """
-    game = db.session.get(Game, 4)
-    payload = game.create_payload(message='Word not found in our dictionary.')
-    assert payload["message"] == 'Word not found in our dictionary.'
-    assert payload["game_id"] == 4

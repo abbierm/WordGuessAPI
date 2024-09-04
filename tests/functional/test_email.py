@@ -19,4 +19,3 @@ def test_send_email(test_client):
         new.send()
         assert len(con.mailman.outbox) == 1
         assert con.mailman.outbox[0].subject == "test_message"
-

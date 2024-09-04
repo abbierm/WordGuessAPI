@@ -1,7 +1,9 @@
 import pytest
-from app import create_app, db
+from app import create_app, db, game_cache
 from app.models import User, Solver, Game
+from app.games import GameNode, create_payload
 from config import Config
+
 
 
 class TestConfig(Config):
@@ -67,6 +69,7 @@ def init_database(test_client):
             email='u4@gmail.com', 
             confirmed=True
         )
+
     user4.set_password('test_password')
     db.session.add(user4)
 
@@ -87,7 +90,7 @@ def init_database(test_client):
             avg=80,
             max_streak=5,
             current_streak=5,
-            api_key='bd64d06a6d271e3a9254afd0e7a94977'
+            api_id='bd64d06a6d271e3a9254afd0e7a94977'
         )
     db.session.add(solver21)
 
@@ -100,7 +103,7 @@ def init_database(test_client):
             avg=50,
             max_streak=10,
             current_streak=0,
-            api_key='bd64d06a6d271e3a9254afd0e7a94978'
+            api_id='bd64d06a6d271e3a9254afd0e7a94978'
         )
     db.session.add(solver22)
 
@@ -113,7 +116,7 @@ def init_database(test_client):
             avg=50,
             max_streak=1,
             current_streak=1,
-            api_key='bd64d06a6d271e3a9254afd0e7a94941'
+            api_id='bd64d06a6d271e3a9254afd0e7a94941'
         )
     db.session.add(solver41)
     solver42 = Solver(
@@ -125,7 +128,7 @@ def init_database(test_client):
             avg_guesses=5.1,
             max_streak=89,
             current_streak=0,
-            api_key='bd64d06a6d271e3a9254afd0e7a94942'
+            api_id='bd64d06a6d271e3a9254afd0e7a94942'
         )
     db.session.add(solver42)
     
@@ -138,40 +141,40 @@ def init_database(test_client):
             avg_guesses=5.1,
             max_streak=89,
             current_streak=0,
-            api_key='bd64d06a6d271e3a9254afd0e7a94943'
+            api_id='bd64d06a6d271e3a9254afd0e7a94943'
         )
     db.session.add(solver43)
     db.session.commit()
 
     game211 = Game(
             solver_id=solver21.id,
+            user_id=user2.id,
             correct_word='tests',
             guess_count=4,
             guesses='aisle, files, texts, tests',
             feedback='BBGBY, BBBYG, GGBGG, GGGGG',
-            status=False,
             results=True
         )
     db.session.add(game211)
 
-    game221 = Game(
-            solver_id=solver21.id,
-            correct_word='great',
-            guess_count=2,
-            guesses="tests, corgi",
-            feedback="YYBBB, BBYYB",
-            status=True
-        )
-    db.session.add(game221)
+    # game221 = Game(
+    #         solver_id=solver21.id,
+    #         correct_word='great',
+    #         guess_count=2,
+    #         guesses="tests, corgi",
+    #         feedback="YYBBB, BBYYB",
+    #         status=True
+    #     )
+    # db.session.add(game221)
     
 
     game411 = Game(
             solver_id=solver41.id,
+            user_id=user4.id,
             correct_word='bleak',
             guess_count=6,
             guesses="tests, corgi, flask, ghost, these, bleep",
             feedback="BYBBB, BBBBB, BGYBG, BBBYY, YBYYB, GGGBB",
-            status=False,
             results=False
         )
     
@@ -179,22 +182,22 @@ def init_database(test_client):
 
     game412 = Game(
             solver_id=solver41.id,
+            user_id=user4.id,
             correct_word='beats',
             guess_count=5,
             guesses="tests, corgi, flask, ghost, beats",
             feedback="BGBGG, BBBBB, BBGYB, BBBYY, GGGGG",
-            status=False,
             results=True
         )
     db.session.add(game412)
 
     game431 = Game(
             solver_id=solver43.id,
+            user_id=user4.id,
             correct_word='quite',
             guess_count=3,
             guesses="ghost, telex, quite",
             feedback="BBBBY, YYBBB, GGGGG",
-            status=False,
             results=True
         )
 
@@ -212,21 +215,25 @@ def init_database(test_client):
 #+===================================================================
 @pytest.fixture(scope="module")
 def active_game(test_client, init_database):
-    
-    game432 = Game(
+
+    game432 = GameNode(
+        game_token="9a1c3132784480a62ad8785cf77a6867",
+        user_id=4,
+        solver_name="solver43",
         solver_id=6,
         correct_word='buddy',
         guess_count=0,
         guesses="",
         feedback="",
-        status=True,
-        results=False
+        status=True
     )
-    db.session.add(game432)
-    db.session.commit()
-
-    game432.get_token()
-    return game432.create_payload()
+    payload = create_payload(
+                game=game432,
+                include_feedback=False,
+                include_correct=False
+    )
+    game_cache.put(game432)
+    return payload
 
 
 #====================================================================
@@ -251,3 +258,12 @@ class AuthActions(object):
 @pytest.fixture
 def auth(test_client, init_database):
     return AuthActions(test_client)
+
+
+@pytest.fixture(scope="module")
+def get_token(test_client, init_database):
+    """Creates a token for user4 that can be used inside of start headers"""
+    user4 = db.session.scalar(db.select(User).where(User.username == "user4"))
+    token = user4.get_api_token()
+    return token
+
