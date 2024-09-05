@@ -46,6 +46,8 @@ def test_start(test_client, init_database, get_token):
     assert isinstance(game_data['game_token'], str) 
     assert game_data['solver_name'] == 'solver43'
 
+    
+
 
 def test_guess(test_client, active_game):
     """

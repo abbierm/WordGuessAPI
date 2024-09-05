@@ -1,9 +1,9 @@
 from collections import OrderedDict
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timezone, timedelta
-from time import time
+from datetime import datetime
 import secrets
+import sys
 
 
 MAX_SIZE = 50
@@ -17,8 +17,8 @@ class GameNode(BaseModel):
     user_id: int
     correct_word: str
     guess_count: int = 0
-    guesses: str = ""
-    feedback: str = ""
+    guesses: list = []
+    feedback: list = []
     status: bool = True
     results: Optional[bool] = None
 
@@ -34,6 +34,7 @@ def create_payload(
     because some fields are included/excluded depending on which stage in the
     gameplay loop this payload is being created 
     """
+ 
     payload = {
         "game_token": game.game_token,
         "solver_name": game.solver_name,
@@ -44,14 +45,12 @@ def create_payload(
         "message": str(message),
         "results": "None"
     }
-    if include_feedback == True:
+    if include_feedback == True and game.guesses != []:
         feedback_dict = {}
-        guess_list = game.guesses.split(', ')
-        feedback_list = game.feedback.split(', ')
-        for i in range(len(guess_list)):
+        for i in range(game.guess_count):
             feedback_dict[i + 1] = {
-                "guess": guess_list[i], 
-                "feedback": feedback_list[i]
+                "guess": game.guesses[i], 
+                "feedback": game.feedback[i]
             }
         payload["guesses"] = feedback_dict
     if include_correct == True:
@@ -69,12 +68,8 @@ def update_game(
         feedback: str
 ):
     game.guess_count += 1
-    if game.guess_count == 1:
-        game.feedback = feedback
-        game.guesses = guess
-    else:
-        game.feedback = "%s, %s" % (game.feedback, feedback)
-        game.guesses = "%s, %s" % (game.guesses, guess)
+    game.guesses.append(guess)
+    game.feedback.append(feedback)
     if feedback == "GGGGG":
         game.status = False
         game.results = True
@@ -118,6 +113,7 @@ class GameCache:
         token = secrets.token_hex(16)
         return token
 
+    # TODO: check expiration
     def check_expiration(game: GameNode):
         pass
 
@@ -131,7 +127,8 @@ class GameCache:
 
     def put(self, game_node: GameNode):
         if self.current_size == self.capacity:
-            self.cache.popitem(last=False)
+            x = self.cache.popitem(last=False)
+            self.current_size -= 1
         self.cache[game_node.game_token] = game_node
         self.cache.move_to_end(game_node.game_token)
         self.current_size += 1
@@ -141,3 +138,14 @@ class GameCache:
         if api_key in self.cache:
             self.cache.popitem(api_key)
             self.current_size -= 1
+
+    def empty(self):
+        self.cache = OrderedDict()
+        self.current_size = 0
+
+
+    def check_capacity(self) -> int:
+        count = 0
+        for key, value in self.cache.items():
+            count += 1
+        return count

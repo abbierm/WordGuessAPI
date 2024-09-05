@@ -157,17 +157,6 @@ def init_database(test_client):
         )
     db.session.add(game211)
 
-    # game221 = Game(
-    #         solver_id=solver21.id,
-    #         correct_word='great',
-    #         guess_count=2,
-    #         guesses="tests, corgi",
-    #         feedback="YYBBB, BBYYB",
-    #         status=True
-    #     )
-    # db.session.add(game221)
-    
-
     game411 = Game(
             solver_id=solver41.id,
             user_id=user4.id,
@@ -213,7 +202,7 @@ def init_database(test_client):
 #====================================================================
 # Game Session For API gameplay
 #+===================================================================
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def active_game(test_client, init_database):
 
     game432 = GameNode(
@@ -223,8 +212,6 @@ def active_game(test_client, init_database):
         solver_id=6,
         correct_word='buddy',
         guess_count=0,
-        guesses="",
-        feedback="",
         status=True
     )
     payload = create_payload(
@@ -233,7 +220,10 @@ def active_game(test_client, init_database):
                 include_correct=False
     )
     game_cache.put(game432)
-    return payload
+    
+    yield payload
+
+    game_cache.remove("9a1c3132784480a62ad8785cf77a6867")
 
 
 #====================================================================

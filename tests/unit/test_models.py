@@ -1,11 +1,11 @@
-from app import db
-from app.models import User, Solver, Game
-
 """
 Testing the sqlalchemy models outside the  
 flask app context by creating class instances  
 and making sure the methods word correctly
 """
+
+from app.models import User, Solver, Game
+import pytest
 
 
 # =========================================================

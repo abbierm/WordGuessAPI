@@ -1,6 +1,7 @@
 import pytest
-from app import db
+from app import db, game_cache
 from app.models import User, Solver, Game
+from app.games import GameNode
 
 
 @pytest.fixture(scope="module")
@@ -133,3 +134,33 @@ def get_lookup_token(test_client, init_database):
     user = db.session.scalar(db.select(User).where(User.id == 5))
     token = user.get_api_token()
     return token
+
+
+@pytest.fixture(scope="function")
+def init_cache(test_client):
+    """
+    Ensures game cache is empty before and emptied after each test
+    """
+    game_cache.empty()
+
+    yield game_cache
+
+    game_cache.empty()
+
+
+@pytest.fixture(scope="function")
+def new_game_node(test_client):
+    """Creates a example GameNode instance to be used for testing purposes"""
+    new_game = GameNode(
+        solver_name="test_solver",
+        game_token='123abc',
+        solver_id=1,
+        user_id=1,
+        correct_word="tests",
+        guess_count=0,
+        status=True,
+        results=None
+    )
+    yield new_game
+
+    game_cache.empty()

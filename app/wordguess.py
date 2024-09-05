@@ -8,7 +8,6 @@ from .models import Game, Solver
 from .words.words import words
 from .words.correct import correct_words
 import random
-import sqlalchemy as sa
 from .games import GameNode, create_payload, update_game
 from datetime import datetime, timezone, timedelta
 
@@ -53,8 +52,8 @@ def _add_game_to_db(game: GameNode) -> None:
             solver_id=game.solver_id,
             user_id=game.user_id,
             guess_count=game.guess_count,
-            guesses=game.guesses,
-            feedback=game.feedback,
+            guesses=", ".join(game.guesses),
+            feedback=", ".join(game.feedback),
             results=game.results,
             correct_word=game.correct_word
     )
@@ -88,7 +87,8 @@ def create_game(solver_id: int, solver_name: str, user_id: int) -> dict:
     return payload
 
 
-def game_loop(game, guess:str): 
+def game_loop(game, guess:str):
+    guess = guess.lower() 
     if _validate_guess(guess) == False:
         return create_payload(
                 include_feedback=False,
@@ -98,7 +98,6 @@ def game_loop(game, guess:str):
     
     feedback = _feedback(game.correct_word, guess)
     update_game(game, guess, feedback)
-    
     
     if game.status == False:
         _add_game_to_db(game)

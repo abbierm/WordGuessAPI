@@ -325,7 +325,7 @@ class RegexSolver:
 #===============================================================
 def main():
     solver_instance = RegexSolver(username='devUser')
-    solver_instance.play(1)
+    solver_instance.play(1000)
 
 if __name__ == "__main__":
     main()

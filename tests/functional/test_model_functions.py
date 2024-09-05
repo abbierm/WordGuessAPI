@@ -7,7 +7,7 @@ All tests from app.models.py file
 import pytest
 from app import db
 from app.models import User, Game, Solver
-from sqlalchemy import exc, func, and_
+from sqlalchemy import func
 import sqlalchemy as sa
 
 
@@ -17,7 +17,7 @@ import sqlalchemy as sa
 
 def test_adding_user(init_database):
     """
-    GIVEN pre-filled database
+    GIVEN a pre-filled database
     WHEN a new user is added to the database
     THEN check if user was added and found inside the db.
     """
