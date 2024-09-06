@@ -88,4 +88,3 @@ def create_new_key():
         solver = db.session.scalar(sa.select(Solver).where(Solver.id == solver_id))
         solver.make_api_id()
         return redirect(url_for('main.solver', solver_name=solver.name))
-    
