@@ -6,7 +6,6 @@ from app import db
 from app.models import User, Solver
 
 
-
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
