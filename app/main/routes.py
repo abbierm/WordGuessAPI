@@ -8,10 +8,8 @@ from app.models import User, Solver, Game
 
 @bp.route('/', methods=["GET"])
 def index():
-    if current_user.is_authenticated:   
-        return redirect(url_for('main.user', username=current_user.username))
-    else:
-        return render_template('index.html')
+    """Quick Start Documentation"""
+    return render_template('index.html')
 
 
 @bp.route('/user/<username>', methods=["GET"])

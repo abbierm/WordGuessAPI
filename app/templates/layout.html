@@ -23,12 +23,20 @@
         <header class="header">
             <div class="header-left">
                 <div class="v8-logo">
-                    <img src="{{ url_for('static', filename='assets/wg_logo.png') }}">
+                    <a href="{{ url_for('main.index') }}">
+                        <img src="{{ url_for('static', filename='assets/wg_logo.png') }}">
+                    </a>
                 </div>
             </div>
             <nav class="navbar">
                 <ul>
+                    {% if current_user.is_anonymous %}
                     <li><a href="{{ url_for('main.index') }}">WordGuess</a></li>
+                    {% else %}
+                    <li>
+                        <a href="{{ url_for('main.user', username=current_user.username) }}">{{ current_user.username }}</a>
+                    </li>
+                    {% endif %}
                     <li>
                         <a href="https://github.com/abbierm/WordGuessAPI">GitHub</a>
                     </li>

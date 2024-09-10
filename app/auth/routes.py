@@ -17,7 +17,7 @@ from .email import (
 @bp.route('/login', methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.user', username=current_user.username))
     form = LoginForm()
     if form.validate_on_submit() or request.method == "POST":
         user = db.session.scalar(
@@ -26,7 +26,7 @@ def login():
             flash('Invalid username or password')
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.user', username=current_user.username))
     return render_template('auth/login.html', form=form)
 
 
