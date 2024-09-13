@@ -28,9 +28,9 @@
                         <th colspan="4" class="table-heading">Solver ID</th>
                     </tr>
                     <tr>
-                        {% if solver.api_id != None %}
+                        {% if solver.solver_id != None %}
                         <td colspan="4" class="table-row">
-                            {{ solver.api_id }}
+                            {{ solver.solver_id }}
                         </td>
                         {% else %}
                         <td colspan="4" class="table-row">None</td>
@@ -38,7 +38,7 @@
                     </tr>
                     <tr>
                         <td colspan="4" class="table-row">
-                            <form action="{{ url_for('main.create_new_key') }}" method="POST">
+                            <form action="{{ url_for('main.create_solver_id') }}" method="POST">
                             <input type="hidden" value="{{ solver.id }}" name="solver">
                             <input type="submit" class="reset-button" value="Create a new solver ID">
                             </form>

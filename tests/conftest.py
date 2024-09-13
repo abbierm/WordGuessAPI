@@ -90,7 +90,7 @@ def init_database(test_client):
             avg=80,
             max_streak=5,
             current_streak=5,
-            api_id='bd64d06a6d271e3a9254afd0e7a94977'
+            solver_id='bd64d06a6d271e3a9254afd0e7a94977'
         )
     db.session.add(solver21)
 
@@ -103,7 +103,7 @@ def init_database(test_client):
             avg=50,
             max_streak=10,
             current_streak=0,
-            api_id='bd64d06a6d271e3a9254afd0e7a94978'
+            solver_id='bd64d06a6d271e3a9254afd0e7a94978'
         )
     db.session.add(solver22)
 
@@ -116,7 +116,7 @@ def init_database(test_client):
             avg=50,
             max_streak=1,
             current_streak=1,
-            api_id='bd64d06a6d271e3a9254afd0e7a94941'
+            solver_id='bd64d06a6d271e3a9254afd0e7a94941'
         )
     db.session.add(solver41)
     solver42 = Solver(
@@ -128,7 +128,7 @@ def init_database(test_client):
             avg_guesses=5.1,
             max_streak=89,
             current_streak=0,
-            api_id='bd64d06a6d271e3a9254afd0e7a94942'
+            solver_id='bd64d06a6d271e3a9254afd0e7a94942'
         )
     db.session.add(solver42)
     
@@ -141,7 +141,7 @@ def init_database(test_client):
             avg_guesses=5.1,
             max_streak=89,
             current_streak=0,
-            api_id='bd64d06a6d271e3a9254afd0e7a94943'
+            solver_id='bd64d06a6d271e3a9254afd0e7a94943'
         )
     db.session.add(solver43)
     db.session.commit()

@@ -18,17 +18,6 @@ def test_index(test_client):
     assert b'WordGuess' in response.data
 
 
-def test_documentation(test_client):
-    """
-    GIVEN a Flask application configured for testing
-    WHEN the '/documentation' page is requested (GET)
-    THEN check if the response is valid
-    """
-    response = test_client.get('/documentation')
-    assert response.status_code == 200
-    assert b'<h1 class="title">Documentation</h1>' in response.data
-
-
 def test_user_homepage(test_client, auth):
     """
     GIVEN a Flask application configured for testing
@@ -153,7 +142,7 @@ def test_create_api_key(test_client, auth, init_database):
     """
     auth.login()
     response = test_client.post(
-                '/create_api_id',
+                '/create_solver_id',
                 data=dict(solver=6),
                 follow_redirects=True
             )

@@ -20,7 +20,7 @@ def api_lookups(test_client, init_database):
     solver51 = Solver(
         name='solver51',
         user_id =user5.id,
-        api_id = '123456789qwertyuiopasdfghjklzxcvb',
+        solver_id = '123456789qwertyuiopasdfghjklzxcvb',
         words_played=8,
         words_won=6,
         avg=75,
@@ -30,6 +30,12 @@ def api_lookups(test_client, init_database):
     )
 
     db.session.add(solver51)
+
+    solver52 = Solver(
+        name='solver52',
+        user_id=user5.id
+    )
+    db.session.add(solver52)
     db.session.commit()
 
 

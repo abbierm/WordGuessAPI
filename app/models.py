@@ -163,12 +163,12 @@ class Solver(db.Model):
     max_streak: so.Mapped[int] = so.mapped_column(default=0)
     games: so.WriteOnlyMapped['Game'] = so.relationship(back_populates='solver',
                             cascade='all, delete-orphan', passive_deletes=True)
-    api_id: so.Mapped[Optional[str]] = so.mapped_column(
+    solver_id: so.Mapped[Optional[str]] = so.mapped_column(
                                     sa.String(32), index=True, unique=True, nullable=True, default=None)
     
     def to_dict(self):
         payload = {
-            "api_id": self.api_id,
+            "solver_id": self.solver_id,
             "name": self.name,
             "words_played": self.words_played,
             "words_won": self.words_won,
@@ -179,20 +179,20 @@ class Solver(db.Model):
         return payload
     
     def make_api_id(self) -> str:
-        self.api_id = secrets.token_hex(16)
+        self.solver_id = secrets.token_hex(16)
         db.session.add(self)
         db.session.commit()
         return
     
     @staticmethod
     def check_api_id(key):
-        solver = db.session.scalar(sa.select(Solver).where(Solver.api_id == key))
+        solver = db.session.scalar(sa.select(Solver).where(Solver.solver_id == key))
         return solver
     
     @staticmethod
-    def get_solver(api_id: str):
+    def get_solver(solver_id: str):
         """Returns solver instance or None"""
-        return db.session.scalar(sa.select(Solver).where(Solver.api_id == api_id))
+        return db.session.scalar(sa.select(Solver).where(Solver.solver_id == solver_id))
     
     @staticmethod
     def validate_user_solver(username, solver_name) -> bool:

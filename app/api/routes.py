@@ -72,10 +72,9 @@ def make_guess():
 #====================================================================
 @bp.route('/lookup_solver/<string:solver_name>', methods=["GET"])
 @token_auth.login_required
-def lookup_solver(solver_name):
+def lookup_solver(solver_name: str):
     """
         Looks up the solver and returns a Dictionary of the solver's stats
-
 
         Parsing the header manually (in the same way that the Flask_HTTPAuth
         library does) to get access to the user instance. 
@@ -92,3 +91,19 @@ def lookup_solver(solver_name):
         return bad_request(f'Unable to find solver with the name {solver_name}')
     payload = solver.to_dict()
     return payload
+
+
+#====================================================================
+# Edit solver information
+#====================================================================
+@bp.route('/create_solver_id/<string:solver_name>', methods=["POST"])
+@token_auth.login_required
+def create_solver_id(solver_name: str):
+    token = request.headers.get('Authorization').split(None, 1)[1]
+    user = User.check_token(token)
+    solver = db.session.scalar(db.select(Solver).where(
+                                    Solver.name == solver_name))
+    if solver is None or user.id != solver.user_id:
+        return bad_request(f"Unable to find solver with the name {solver_name}")
+    solver.make_api_id()
+    return solver.to_dict()

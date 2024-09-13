@@ -1,6 +1,5 @@
 """
 This file (test_api_lookups.py) tests the view functions api for users to send "GET" requests to view game history data about certain users and solvers.
-
 """
 
 from flask import current_app
@@ -27,7 +26,7 @@ def test_lookup_solver(test_client, api_lookups, get_lookup_token):
     )
     data = response.get_json()
     assert response.status_code == 200
-    assert data["api_id"] == '123456789qwertyuiopasdfghjklzxcvb'
+    assert data["solver_id"] == '123456789qwertyuiopasdfghjklzxcvb'
     assert data["name"] == "solver51"
     assert data["words_played"] == 8
     assert data["words_won"] == 6

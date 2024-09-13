@@ -78,9 +78,10 @@ def solver(solver_name, filter=None):
             prev_url=prev_url, next_url=next_url, games=games)
     
         
-@bp.route('/create_api_id', methods=["POST"])
+@bp.route('/create_solver_id', methods=["POST"])
 @login_required
-def create_new_key():
+def create_solver_id():
+    """Creates a new solver_id."""
     if request.method == "POST" and current_user.is_authenticated:
         solver_id = request.form.get("solver")
         solver = db.session.scalar(sa.select(Solver).where(Solver.id == solver_id))

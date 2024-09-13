@@ -134,7 +134,7 @@ def test_solver_to_dict(init_database):
     assert payload["avg_won"] == 80
     assert payload["avg_guesses"] == 4.5
     assert payload["max_streak"] == 5
-    assert payload["api_id"] =='bd64d06a6d271e3a9254afd0e7a94977'
+    assert payload["solver_id"] =='bd64d06a6d271e3a9254afd0e7a94977'
 
 
 def test_make_solver_api_key(init_database):
@@ -145,9 +145,9 @@ def test_make_solver_api_key(init_database):
     """
     solver = db.session.scalar(db.select(Solver).where(Solver.id == 2))
     solver.make_api_id()
-    assert solver.api_id != 'bd64d06a6d271e3a9254afd0e7a94977'
-    assert type(solver.api_id) == str
-    assert len(solver.api_id) == 32
+    assert solver.solver_id != 'bd64d06a6d271e3a9254afd0e7a94977'
+    assert type(solver.solver_id) == str
+    assert len(solver.solver_id) == 32
 
 
 def test_check_api_key(init_database):
