@@ -1,10 +1,10 @@
 __pycache__/
 .pytest_cache/
 .env
-.venv
+*venv/
 .virtualenv
 .vscode/
-.wordguess_api_venv/
+wordguess_api_venv/
 instance/
 .coverage
 flask_session/
