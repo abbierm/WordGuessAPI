@@ -8,11 +8,7 @@ wordguess_api_venv/
 instance/
 .coverage
 flask_session/
-*.log
-.logs/*
-logs
+logs/*
+*.logs
+*.log*
 app.db
-
-# helper files 
-app/games.txt
-test_example.py
